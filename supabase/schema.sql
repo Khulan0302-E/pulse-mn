@@ -288,8 +288,9 @@ drop policy if exists verifications_insert on public.verifications;
 create policy verifications_insert on public.verifications for insert
   with check (user_id = public.my_profile_id() and status = 'pending' and public.my_role() = 'journalist');
 drop policy if exists verifications_update on public.verifications;
+-- Сэтгүүлчийн баримтыг Редактор баталгаажуулна
 create policy verifications_update on public.verifications for update
-  using (public.my_role() = 'admin') with check (public.my_role() = 'admin');
+  using (public.my_role() = 'editor') with check (public.my_role() = 'editor');
 
 -- categories, locations: бүгд уншина
 drop policy if exists categories_select on public.categories;
@@ -425,11 +426,11 @@ create policy "pulse media delete" on storage.objects for delete to authenticate
 drop policy if exists "pulse docs upload" on storage.objects;
 create policy "pulse docs upload" on storage.objects for insert to authenticated
   with check (bucket_id = 'verification-docs' and (storage.foldername(name))[1] = auth.uid()::text);
--- Баримтыг зөвхөн эзэн нь болон админ үзнэ
+-- Баримтыг зөвхөн эзэн нь болон редактор үзнэ
 drop policy if exists "pulse docs read" on storage.objects;
 create policy "pulse docs read" on storage.objects for select to authenticated
   using (bucket_id = 'verification-docs'
-         and ((storage.foldername(name))[1] = auth.uid()::text or public.my_role() = 'admin'));
+         and ((storage.foldername(name))[1] = auth.uid()::text or public.my_role() = 'editor'));
 
 -- ---------- Анхны өгөгдөл ----------
 

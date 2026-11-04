@@ -39,7 +39,7 @@ Production build: `npm run build` → `dist/` хавтас.
 
 | ID | Хаана | Тайлбар |
 |---|---|---|
-| FR-AUTH-001 | `pages/Register.jsx`, `pages/journalist/Verification.jsx`, `pages/admin/Verifications.jsx` | Баримт (үнэмлэх / МСНЭ / диплом) хавсаргаж бүртгүүлэх, админ баталгаажуулах/шалтгаантай татгалзах, дахин илгээх |
+| FR-AUTH-001 | `pages/Register.jsx`, `pages/journalist/Verification.jsx`, `pages/admin/Verifications.jsx` | Баримт (үнэмлэх / МСНЭ / диплом) хавсаргаж бүртгүүлэх, редактор баталгаажуулах/шалтгаантай татгалзах (эх баримтад Админ гэж заасныг багаар өөрчилсөн), дахин илгээх |
 | FR-CNT-001 | `pages/journalist/DraftEditor.jsx`, `components/NewsForm.jsx` | Зураг/бичлэг, аймаг-сум, зохиогчийн эрхийн зөвшөөрөл, урьдчилсан харагдац |
 | FR-CNT-003 | `pages/journalist/Dashboard.jsx`, `DraftDetail.jsx` | Түүх, төлөв/огноогоор шүүх, редакторын шийдвэр, шалтгаан |
 | FR-CNT-004 | `DraftEditor.jsx` (resubmit горим) | Буцаагдсан ноорог засаж дахин илгээх, өөрчлөлтгүй бол баталгаажуулалт асууна |
@@ -78,6 +78,7 @@ src/
 5. `npm install` → `npm run dev`. Сайт дээр админ болох хүнээрээ бүртгүүлнэ.
 6. `supabase/make-admin.sql`-д и-мэйлээ бичээд SQL Editor дээр Run → таныг админ болгоно.
    Дахин нэвтэрч **Админ → Лог ба нөөц → Жишээ мэдээ нэмэх** дарж нүүр хуудсыг дүүргэж болно.
+   Сэтгүүлчийн баримтыг **Редактор** баталгаажуулна — редакторыг **Админ → Хэрэглэгчид** хэсгээс томилно.
 7. (Заавал биш) **Database → Extensions → pg_cron** асаагаад `supabase/cron.sql`-ийг Run —
    товлосон нийтлэл минут тутам автоматаар нийтлэгдэнэ. Үгүй бол редактор сайтад орсон үед нийтлэгдэнэ.
 8. **Vercel → Project → Settings → Environment Variables**-д `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`-г нэмээд

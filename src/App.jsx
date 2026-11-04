@@ -97,10 +97,11 @@ export default function App() {
           <Route path="scheduled" element={<ScheduledList />} />
           <Route path="published" element={<Published />} />
           <Route path="published/:id/edit" element={<Keyed Component={EditPublished} />} />
+          <Route path="verifications" element={<Verifications />} />
         </Route>
 
         <Route path="a" element={<RequireAuth roles={[ROLES.ADMIN]}><WorkspaceLayout /></RequireAuth>}>
-          <Route index element={<Verifications />} />
+          <Route index element={<Users />} />
           <Route path="users" element={<Users />} />
           <Route path="integrations" element={<Integrations />} />
           <Route path="system" element={<System />} />

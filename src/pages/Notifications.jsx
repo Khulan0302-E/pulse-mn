@@ -15,7 +15,8 @@ export default function Notifications() {
   const unread = list.filter((n) => !n.read).length;
 
   const target = (n) => {
-    if (user.role === ROLES.ADMIN && !n.newsId) return '/a';
+    if (user.role === ROLES.EDITOR && !n.newsId) return '/e/verifications';
+    if (user.role === ROLES.ADMIN && !n.newsId) return '/a/integrations';
     if (!n.newsId) return null;
     if (user.role === ROLES.JOURNALIST) return `/j/news/${n.newsId}`;
     if (user.role === ROLES.EDITOR) {

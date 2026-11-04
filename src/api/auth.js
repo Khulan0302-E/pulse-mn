@@ -126,7 +126,7 @@ export async function register(data) {
         fileName: data.file.name, status: VERIFY.PENDING, reviewerId: null, decidedAt: null,
         reason: '', createdAt: now(),
       });
-      notifyRole(d, ROLES.ADMIN, `Шинэ сэтгүүлч ${fullName} баталгаажуулах хүсэлт илгээлээ.`);
+      notifyRole(d, ROLES.EDITOR, `Шинэ сэтгүүлч ${fullName} баталгаажуулах хүсэлт илгээлээ.`);
     }
     addLog(d, id, 'Бүртгүүлсэн', `${role === ROLES.JOURNALIST ? 'Сэтгүүлч' : 'Иргэн'} #${id}`);
     return user;
@@ -163,7 +163,7 @@ async function remoteRegister({ fullName, email, phone, org, role, password, doc
         id: nextId(d, 'verifications'), userId: me.id, docType, fileUrl, fileName: file.name,
         status: VERIFY.PENDING, reviewerId: null, decidedAt: null, reason: '', createdAt: now(),
       });
-      notifyRole(d, ROLES.ADMIN, `Шинэ сэтгүүлч ${fullName} баталгаажуулах хүсэлт илгээлээ.`);
+      notifyRole(d, ROLES.EDITOR, `Шинэ сэтгүүлч ${fullName} баталгаажуулах хүсэлт илгээлээ.`);
       addLog(d, me.id, 'Бүртгүүлсэн', `Сэтгүүлч #${me.id}`);
     });
   } else {
@@ -193,7 +193,7 @@ export async function resubmitVerification(user, docType, file) {
       id: nextId(d, 'verifications'), userId: user.id, docType, fileUrl, fileName: file.name,
       status: VERIFY.PENDING, reviewerId: null, decidedAt: null, reason: '', createdAt: now(),
     });
-    notifyRole(d, ROLES.ADMIN, `${user.fullName} баталгаажуулах баримтаа дахин илгээлээ.`);
+    notifyRole(d, ROLES.EDITOR, `${user.fullName} баталгаажуулах баримтаа дахин илгээлээ.`);
     addLog(d, user.id, 'Баримт дахин илгээсэн', `Хэрэглэгч #${user.id}`);
   });
 }

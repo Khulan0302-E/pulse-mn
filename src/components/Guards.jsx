@@ -29,12 +29,12 @@ const NAV = {
   ],
   editor: [
     { to: '/e', label: 'Хянах жагсаалт', icon: Inbox, end: true, badge: 'review' },
+    { to: '/e/verifications', label: 'Сэтгүүлч баталгаажуулах', icon: BadgeCheck, badge: 'pendingVerify' },
     { to: '/e/scheduled', label: 'Товлосон', icon: CalendarClock, badge: 'scheduled' },
     { to: '/e/published', label: 'Нийтлэгдсэн', icon: Newspaper },
   ],
   admin: [
-    { to: '/a', label: 'Сэтгүүлч баталгаажуулах', icon: BadgeCheck, end: true, badge: 'pendingVerify' },
-    { to: '/a/users', label: 'Хэрэглэгчид', icon: Users },
+    { to: '/a', label: 'Хэрэглэгчид', icon: Users, end: true },
     { to: '/a/integrations', label: 'API интеграц', icon: Plug },
     { to: '/a/system', label: 'Лог ба нөөц', icon: ScrollText },
   ],

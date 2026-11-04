@@ -157,8 +157,8 @@ export async function buildSeed() {
   }
 
   const verifications = [
-    { id: 1, userId: 3, docType: 'org_id', fileUrl: null, fileName: 'unemleh.pdf', status: 'approved', reviewerId: 1, decidedAt: hoursAgo(790), reason: '', createdAt: hoursAgo(800) },
-    { id: 2, userId: 4, docType: 'msne', fileUrl: null, fileName: 'msne.pdf', status: 'approved', reviewerId: 1, decidedAt: hoursAgo(690), reason: '', createdAt: hoursAgo(700) },
+    { id: 1, userId: 3, docType: 'org_id', fileUrl: null, fileName: 'unemleh.pdf', status: 'approved', reviewerId: 2, decidedAt: hoursAgo(790), reason: '', createdAt: hoursAgo(800) },
+    { id: 2, userId: 4, docType: 'msne', fileUrl: null, fileName: 'msne.pdf', status: 'approved', reviewerId: 2, decidedAt: hoursAgo(690), reason: '', createdAt: hoursAgo(700) },
     { id: 3, userId: 5, docType: 'diploma', fileUrl: sampleDoc, fileName: 'diplom.pdf', status: 'pending', reviewerId: null, decidedAt: null, reason: '', createdAt: hoursAgo(6) },
   ];
 
@@ -234,7 +234,7 @@ export async function buildSeed() {
     versions,
     notifications: [
       { id: 1, userId: 3, newsId: 11, content: 'Редактор таны «Сумын төвийн худгийн усны чанарыг шалгав» ноорогийг буцаалаа.', createdAt: hoursAgo(10), read: false },
-      { id: 2, userId: 1, newsId: null, content: 'Шинэ сэтгүүлч Г. Тэмүүлэн баталгаажуулах хүсэлт илгээлээ.', createdAt: hoursAgo(6), read: false },
+      { id: 2, userId: 2, newsId: null, content: 'Шинэ сэтгүүлч Г. Тэмүүлэн баталгаажуулах хүсэлт илгээлээ.', createdAt: hoursAgo(6), read: false },
       { id: 3, userId: 2, newsId: 12, content: 'Шинэ ноорог хянуулахаар ирлээ: «Ургац хураалт дуусах шатандаа орлоо».', createdAt: hoursAgo(5), read: false },
     ],
     external: [],
