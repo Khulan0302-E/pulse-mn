@@ -57,7 +57,7 @@ dl, dd { margin: 0; }
 /* ---------- Utilities ---------- */
 .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 @media (max-width: 640px) { .container { padding: 0 16px; } }
-.page { padding: 28px 0 56px; }
+.page { padding-top: 28px; padding-bottom: 56px; }
 .narrow { max-width: 820px; }
 .muted { color: var(--muted); }
 .small { font-size: 12.5px; }
@@ -148,7 +148,7 @@ dl, dd { margin: 0; }
 .catnav a.active { color: var(--ink); border-bottom-color: var(--accent); }
 .header-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; flex: none; }
 @media (max-width: 960px) {
-  .header-inner { flex-wrap: wrap; height: auto; padding: 10px 0 8px; row-gap: 8px; }
+  .header-inner { flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 8px; row-gap: 8px; }
   .catnav { order: 3; flex-basis: 100%; gap: 18px; height: 40px; border-top: 1px solid var(--line); padding-top: 2px; }
 }
 
@@ -500,3 +500,59 @@ dl, dd { margin: 0; }
 .notif-body { display: flex; flex-direction: column; gap: 3px; }
 
 .backup { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+/* ---------- Онцлох мэдээ карусель (21st.dev Connected Carousel-ээс санаа авсан) ---------- */
+.cc { --cc-ease: cubic-bezier(0.3, 1.12, 0.5, 1); position: relative; margin: 0 0 8px; outline: none; }
+.cc:focus-visible { box-shadow: 0 0 0 3px rgba(36, 72, 216, 0.25); border-radius: 18px; }
+.cc-stage { position: relative; width: 100%; overflow: hidden; }
+.cc-card {
+  position: absolute; left: 50%; top: 50%;
+  border-radius: 22px; background: var(--surface);
+  box-shadow: 0 10px 30px rgba(20, 22, 28, 0.08), 0 4px 12px rgba(20, 22, 28, 0.06);
+  transition: transform 0.7s var(--cc-ease), width 0.7s var(--cc-ease), height 0.7s var(--cc-ease), opacity 0.45s ease;
+  will-change: transform;
+}
+.cc-card.is-side { cursor: pointer; }
+.cc-card.is-side:hover .cc-peek .cover { filter: brightness(1.08); }
+.cc-notch { position: absolute; top: 0; bottom: 0; margin: auto 0; color: var(--surface); pointer-events: none; z-index: 3; }
+.cc-notch svg { display: block; width: 100%; height: 100%; fill: currentColor; overflow: visible; }
+.cc-inner { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+.cc-peek { position: absolute; inset: 0; padding: 7px; transition: opacity 0.25s ease; }
+.cc-peek .cover { width: 100%; height: 100%; border-radius: 16px; transition: filter 0.2s; }
+.cc-peek .cover-label, .cc-peek .cover-waves { display: none; }
+.cc-content {
+  position: absolute; left: 50%; top: 50%;
+  display: flex; gap: 28px; padding: 26px; color: inherit;
+  transition: transform 0.7s var(--cc-ease), opacity 0.35s ease;
+}
+.cc-text { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.cc-title { font-size: 28px; line-height: 1.2; letter-spacing: -0.025em; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.15s; }
+.cc-content:hover .cc-title { color: var(--accent); }
+.cc-quote { margin: 0; font-size: 15px; line-height: 1.7; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.cc-quote::before { content: '“'; color: var(--accent); font-weight: 800; margin-right: 2px; }
+.cc-quote::after { content: '”'; color: var(--accent); font-weight: 800; margin-left: 2px; }
+.cc-chips { display: flex; flex-direction: column; align-items: flex-start; }
+.cc-chip { display: inline-block; max-width: 100%; padding: 4px 10px; border-radius: 5px; background: var(--accent-soft); color: var(--muted); font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-chip.strong { color: var(--accent-hover); font-weight: 700; }
+.cc-joint { display: block; margin: -1px 0 -1px 12px; fill: var(--accent-soft); position: relative; z-index: 1; }
+.cc-more { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 700; }
+.cc-media { flex: none; width: clamp(220px, 46%, 380px); border-radius: 16px; overflow: hidden; }
+.cc-media .cover { width: 100%; height: 100%; }
+.cc.is-tablet .cc-title { font-size: 24px; }
+.cc.is-tablet .cc-media { width: 40%; }
+.cc.is-mobile .cc-content { flex-direction: column; padding: 14px; gap: 12px; }
+.cc.is-mobile .cc-media { order: -1; width: 100%; height: 190px; }
+.cc.is-mobile .cc-text { justify-content: flex-start; gap: 10px; }
+.cc.is-mobile .cc-title { font-size: 20px; }
+.cc.is-mobile .cc-quote { font-size: 13.5px; -webkit-line-clamp: 3; }
+.cc.is-mobile .cc-card { border-radius: 18px; }
+.cc-tabs { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.cc-tab { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 3px; overflow: hidden; background: var(--line-2); cursor: pointer; transition: width 0.3s ease, background 0.15s; }
+.cc-tab:hover { background: var(--muted); }
+.cc-tab.is-active { width: 72px; background: var(--line-2); }
+.cc-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cc-tab-fill { display: block; height: 100%; border-radius: 3px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
+.section-title.first { margin-top: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  .cc-card, .cc-content, .cc-peek, .cc-tab { transition: none; }
+}

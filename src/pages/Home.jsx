@@ -6,6 +6,7 @@ import { CATEGORIES } from '../lib/constants';
 import { listPublished } from '../api/news';
 import NewsCard, { LeadStory, CatLabel } from '../components/NewsCard';
 import { WeatherCard, FxCard } from '../components/InfoWidgets';
+import FeaturedCarousel from '../components/FeaturedCarousel';
 import { Empty } from '../components/ui';
 import { timeAgo } from '../lib/format';
 import NotFound from './NotFound';
@@ -38,8 +39,11 @@ export default function Home() {
 
   const all = listPublished();
   const items = cat ? all.filter((n) => n.categoryId === cat.id) : all;
+  // Нүүр хуудсанд 3-аас дээш мэдээ байвал хамгийн сүүлийн 5-ыг каруселд харуулна
+  const featured = !cat && items.length >= 3 ? items.slice(0, 5) : [];
   const [lead, ...others] = items;
-  const rest = cat ? others : others.slice(0, 6);
+  // Карусельтэй үед түүний дараах 6 мэдээ, үгүй бол онцлох мэдээний дараах мэдээнүүд
+  const latest = featured.length ? items.slice(featured.length, featured.length + 6) : cat ? others : others.slice(0, 6);
   const popular = [...all].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
 
   return (
@@ -50,18 +54,19 @@ export default function Home() {
           <span className="muted">{items.length} мэдээ</span>
         </div>
       )}
+      {featured.length > 0 && <FeaturedCarousel items={featured} />}
       <div className="home-grid">
         <div className="home-main">
           {!lead ? (
             <div className="card"><Empty icon={Newspaper} title="Мэдээ олдсонгүй" text="Энэ ангилалд нийтлэгдсэн мэдээ одоогоор алга байна." /></div>
           ) : (
             <>
-              <LeadStory news={lead} />
-              {rest.length > 0 && (
+              {!featured.length && <LeadStory news={lead} />}
+              {latest.length > 0 && (
                 <>
-                  <h2 className="section-title">{cat ? 'Бусад мэдээ' : 'Сүүлийн мэдээ'}</h2>
+                  <h2 className={`section-title ${featured.length ? 'first' : ''}`}>{cat ? 'Бусад мэдээ' : 'Сүүлийн мэдээ'}</h2>
                   <div className="card-grid">
-                    {rest.map((n) => <NewsCard key={n.id} news={n} />)}
+                    {latest.map((n) => <NewsCard key={n.id} news={n} />)}
                   </div>
                 </>
               )}
