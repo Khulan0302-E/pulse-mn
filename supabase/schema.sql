@@ -387,9 +387,20 @@ drop policy if exists logs_insert on public.activity_logs;
 create policy logs_insert on public.activity_logs for insert
   with check (public.my_profile_id() is not null);
 
+-- Data API-ийн эрх. «Automatically expose new tables»-ийг унтраасан ч ажиллана.
+-- Мөр бүрийн хандалтыг дээрх RLS дүрмүүд хязгаарлана.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to anon, authenticated;
+
+-- authors view нь RLS-ийг тойрдог тул зөвхөн унших эрхтэй байна (засах боломжгүй)
+revoke all on public.authors from anon, authenticated, public;
 grant select on public.authors to anon, authenticated;
+
 grant execute on function public.increment_view(bigint) to anon, authenticated;
+grant execute on function public.my_profile_id(), public.my_role(), public.is_staff(), public.is_verified_journalist()
+  to anon, authenticated;
 revoke execute on function public.publish_due_news() from public, anon, authenticated;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
 -- ---------- Файл хадгалалт (INT-004, NFR-SEC-008) ----------
 
