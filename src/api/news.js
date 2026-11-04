@@ -1,8 +1,9 @@
 // Контент, редакцийн хяналт, нийтлэл
 // FR-CNT-001, FR-CNT-003, FR-CNT-004, FR-EDT-004, FR-PUB-003, FR-PUB-004
 // NFR-TRN-002, NFR-DAT-001, NFR-SEC-007
-import { getDb, mutate, nextId, now, addLog, notify, notifyRole } from '../lib/db';
-import { uploadFile } from '../lib/files';
+import { getDb, mutate, nextId, now, addLog, notify, notifyRole, isRemote, getCurrentUser } from '../lib/db';
+import { uploadFile, getFileBlob, isLocalFile } from '../lib/files';
+import { supabase } from '../lib/supabase';
 import { STATUS, ROLES, DECISION, DECISION_LABELS, LIMITS, MAX_MEDIA_PER_NEWS } from '../lib/constants';
 import { AppError, assertRole, isVerifiedJournalist } from './auth';
 
@@ -61,14 +62,17 @@ const viewed = new Set();
 export function incrementView(id) {
   if (viewed.has(id)) return;
   viewed.add(id);
-  try {
-    mutate((d) => {
-      const n = d.news.find((x) => x.id === id);
-      if (n) n.views = (n.views || 0) + 1;
-    });
-  } catch {
-    /* үзэлт тоолох нь чухал биш */
+  const bump = (d) => {
+    const n = d.news.find((x) => x.id === id);
+    if (n) n.views = (n.views || 0) + 1;
+  };
+  if (isRemote) {
+    // Иргэн мэдээг засах эрхгүй тул сервер талын функцээр тоолно
+    supabase.rpc('increment_view', { p_id: id }).then(() => {}, () => {});
+    mutate(bump, { sync: false }).catch(() => {});
+    return;
   }
+  mutate(bump).catch(() => {}); // үзэлт тоолох нь чухал биш
 }
 
 // ---------- Шалгалт ----------
@@ -95,11 +99,21 @@ export async function prepareFiles(items = []) {
   const out = [];
   for (const it of items) {
     if (it.fileUrl) {
+      // Офлайн үед браузерт түр хадгалсан файлыг холболт сэргэсний дараа Supabase руу байршуулна
+      if (isRemote && navigator.onLine && isLocalFile(it.fileUrl)) {
+        try {
+          const blob = await getFileBlob(it.fileUrl);
+          out.push({ ...it, fileUrl: await uploadFile(blob, 'media', it.name) });
+        } catch {
+          throw new AppError('Түр хадгалсан файлыг байршуулж чадсангүй.');
+        }
+        continue;
+      }
       out.push(it);
       continue;
     }
     try {
-      const fileUrl = await uploadFile(it.file);
+      const fileUrl = await uploadFile(it.file, 'media');
       out.push({ type: it.type, name: it.file.name, sizeMB: it.sizeMB, fileUrl });
     } catch {
       throw new AppError('Файл хадгалж чадсангүй. Дахин оролдоно уу.');
@@ -271,7 +285,7 @@ export function editorList(user, status) {
 }
 
 /** FR-EDT-004: шийдвэр гаргах, тайлбар өгөх, нийтлэх/товлох */
-export function decide(user, id, { decision, comment = '', publishMode = 'now', scheduledAt = null, checks = {} }) {
+export async function decide(user, id, { decision, comment = '', publishMode = 'now', scheduledAt = null, checks = {} }) {
   assertRole(user, ROLES.EDITOR);
   const text = comment.trim();
   if (!Object.values(DECISION).includes(decision)) throw new AppError('Шийдвэрээ сонгоно уу.');
@@ -321,9 +335,9 @@ export function decide(user, id, { decision, comment = '', publishMode = 'now', 
   });
 }
 
-export function publishNow(user, id) {
+export async function publishNow(user, id) {
   assertRole(user, ROLES.EDITOR);
-  mutate((d) => {
+  await mutate((d) => {
     const n = d.news.find((x) => x.id === id);
     if (!n || n.status !== STATUS.SCHEDULED) throw new AppError('Товлосон нийтлэл олдсонгүй.');
     n.status = STATUS.PUBLISHED;
@@ -335,10 +349,12 @@ export function publishNow(user, id) {
 }
 
 /** Товлосон цаг болсон нийтлэлийг автоматаар нийтэлнэ */
-export function runScheduler() {
+export async function runScheduler() {
+  // Supabase горимд сервер талын cron (supabase/cron.sql) нийтэлнэ; редактор онлайн байвал энд бас шалгана
+  if (isRemote && !['editor', 'admin'].includes(getCurrentUser()?.role)) return;
   const due = getDb().news.filter((n) => n.status === STATUS.SCHEDULED && new Date(n.scheduledAt).getTime() <= Date.now());
   if (!due.length) return;
-  mutate((d) => {
+  await mutate((d) => {
     due.forEach(({ id }) => {
       const n = d.news.find((x) => x.id === id);
       if (!n || n.status !== STATUS.SCHEDULED) return;
@@ -375,12 +391,12 @@ export async function updatePublished(user, id, data) {
 
 // ---------- Мэдэгдэл ----------
 export function markRead(user, id) {
-  mutate((d) => {
+  return mutate((d) => {
     const n = d.notifications.find((x) => x.id === id && x.userId === user.id);
     if (n) n.read = true;
   });
 }
 
 export function markAllRead(user) {
-  mutate((d) => d.notifications.forEach((n) => n.userId === user.id && (n.read = true)));
+  return mutate((d) => d.notifications.forEach((n) => n.userId === user.id && (n.read = true)));
 }

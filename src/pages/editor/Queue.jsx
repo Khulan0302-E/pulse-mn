@@ -96,9 +96,9 @@ export function ScheduledList() {
           title="Одоо нийтлэх үү?"
           text={`«${confirm.title}» нийтлэлийг товлосон цагаас өмнө шууд нийтэлнэ.`}
           confirmLabel="Нийтлэх"
-          onConfirm={() => {
+          onConfirm={async () => {
             try {
-              publishNow(user, confirm.id);
+              await publishNow(user, confirm.id);
               toast.success('Нийтлэгдлээ.');
             } catch (e) {
               toast.error(e.message);

@@ -20,9 +20,9 @@ export default function Users() {
     .filter((u) => !role || u.role === role)
     .filter((u) => !q.trim() || `${u.fullName} ${u.email}`.toLowerCase().includes(q.trim().toLowerCase()));
 
-  const apply = (id, patch) => {
+  const apply = async (id, patch) => {
     try {
-      updateUser(user, id, patch);
+      await updateUser(user, id, patch);
       toast.success('Хадгалагдлаа.');
     } catch (e) {
       toast.error(e.message);

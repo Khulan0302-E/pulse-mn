@@ -28,7 +28,8 @@ initDb()
     root.render(
       <div style={{ padding: 40, fontFamily: 'sans-serif' }}>
         <h2>Систем ачаалж чадсангүй</h2>
-        <p>Хуудсыг http://localhost:5173 хаягаар нээж байгаа эсэхээ шалгана уу. ({String(err.message || err)})</p>
+        <p>{String(err.message || err)}</p>
+        <p style={{ color: '#666' }}>Supabase ашиглаж байгаа бол .env.local дахь URL, түлхүүр зөв эсэх, supabase/schema.sql ажилласан эсэхийг шалгана уу.</p>
       </div>,
     );
   });

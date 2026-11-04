@@ -1,5 +1,6 @@
 // Админ: сэтгүүлч баталгаажуулах, хэрэглэгчийн эрх, тохиргоо, лог
-import { getDb, mutate, now, addLog, notify } from '../lib/db';
+import { getDb, mutate, now, addLog, notify, nextId } from '../lib/db';
+import { SAMPLE_ARTICLES } from '../lib/seed';
 import { ROLES, VERIFY, USER_STATUS, ROLE_LABELS, LIMITS } from '../lib/constants';
 import { AppError, assertRole } from './auth';
 
@@ -11,12 +12,12 @@ export function listVerifications(user, status) {
 }
 
 /** FR-AUTH-001 алхам 4–5 */
-export function decideVerification(user, id, approve, reason = '') {
+export async function decideVerification(user, id, approve, reason = '') {
   assertRole(user, ROLES.ADMIN);
   const text = reason.trim();
   if (!approve && !text) throw new AppError('Татгалзах шалтгааныг заавал бичнэ.');
   if (text.length > LIMITS.reason) throw new AppError(`Шалтгаан ${LIMITS.reason} тэмдэгтээс хэтрэхгүй.`);
-  mutate((d) => {
+  await mutate((d) => {
     const v = d.verifications.find((x) => x.id === id);
     if (!v || v.status !== VERIFY.PENDING) throw new AppError('Энэ хүсэлт аль хэдийн шийдвэрлэгдсэн байна.');
     v.status = approve ? VERIFY.APPROVED : VERIFY.REJECTED;
@@ -34,10 +35,10 @@ export function decideVerification(user, id, approve, reason = '') {
   });
 }
 
-export function updateUser(user, id, patch) {
+export async function updateUser(user, id, patch) {
   assertRole(user, ROLES.ADMIN);
   if (id === user.id) throw new AppError('Өөрийн эрх, төлвийг өөрчлөх боломжгүй.');
-  mutate((d) => {
+  await mutate((d) => {
     const u = d.users.find((x) => x.id === id);
     if (!u) throw new AppError('Хэрэглэгч олдсонгүй.');
     if (patch.role && patch.role !== u.role) {
@@ -54,12 +55,12 @@ export function updateUser(user, id, patch) {
   });
 }
 
-export function saveIntegration(user, type, patch) {
+export async function saveIntegration(user, type, patch) {
   assertRole(user, ROLES.ADMIN);
   const interval = Number(patch.intervalMin);
   if (!/^https:\/\//i.test(patch.url || '')) throw new AppError('API URL https:// -ээр эхэлнэ.');
   if (!Number.isFinite(interval) || interval < 5) throw new AppError('Шинэчлэх давтамж хамгийн багадаа 5 минут.');
-  mutate((d) => {
+  await mutate((d) => {
     Object.assign(d.settings[type], {
       url: patch.url.trim(),
       apiKey: (patch.apiKey || '').trim(),
@@ -69,5 +70,34 @@ export function saveIntegration(user, type, patch) {
       ...(type === 'fx' ? { currencies: (patch.currencies || '').toUpperCase().replace(/\s/g, '') } : {}),
     });
     addLog(d, user.id, 'API тохиргоо өөрчилсөн', type === 'weather' ? 'Цаг агаар' : 'Валютын ханш');
+  });
+}
+
+/** Supabase-ийн хоосон өгөгдлийн санд жишээ нийтлэл нэмэх (зохиогч нь админ) */
+export async function seedSampleNews(user) {
+  assertRole(user, ROLES.ADMIN);
+  const db = getDb();
+  const loc = (aimag, sum) => db.locations.find((l) => l.aimag === aimag && l.sum === sum)?.id;
+  return mutate((d) => {
+    let added = 0;
+    SAMPLE_ARTICLES.forEach((a) => {
+      if (d.news.some((x) => x.title === a.title)) return;
+      const id = nextId(d, 'news');
+      const t = new Date(Date.now() - a.h * 3600 * 1000).toISOString();
+      const n = {
+        id, journalistId: user.id, title: a.title, content: a.content, categoryId: a.cat,
+        locationId: loc(...a.loc), status: 'published', version: 1, source: a.source,
+        sourceConfidential: false, copyrightConsent: true, createdAt: t, submittedAt: t,
+        scheduledAt: null, publishedAt: t, updatedAt: t, views: a.views,
+      };
+      d.news.push(n);
+      d.versions.push({
+        id: nextId(d, 'versions'), newsId: id, version: 1, userId: user.id, createdAt: t,
+        snapshot: { title: n.title, content: n.content, categoryId: n.categoryId, locationId: n.locationId, source: n.source, media: [] },
+      });
+      added++;
+    });
+    if (added) addLog(d, user.id, 'Жишээ мэдээ нэмсэн', `${added} мэдээ`);
+    return added;
   });
 }

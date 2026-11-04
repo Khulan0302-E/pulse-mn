@@ -19,9 +19,9 @@ function IntegrationCard({ type }) {
   const [busy, setBusy] = useState(false);
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
 
-  const save = () => {
+  const save = async () => {
     try {
-      saveIntegration(user, type, f);
+      await saveIntegration(user, type, f);
       toast.success('Тохиргоо хадгалагдлаа.');
     } catch (e) {
       toast.error(e.message);

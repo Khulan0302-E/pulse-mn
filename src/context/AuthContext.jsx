@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { useDb } from '../lib/useDb';
 import { SESSION_KEY } from '../lib/db';
-import { login as apiLogin, register as apiRegister } from '../api/auth';
+import { login as apiLogin, register as apiRegister, logout as apiLogout } from '../api/auth';
 
 const AuthCtx = createContext(null);
 
@@ -15,8 +15,9 @@ function readSession() {
 
 export function AuthProvider({ children }) {
   const db = useDb();
-  const [sessionId, setSessionId] = useState(readSession);
-  // Түдгэлзсэн хэрэглэгч автоматаар гарна
+  const [, setSessionId] = useState(readSession);
+  // Сешн дууссан (Supabase) эсвэл түдгэлзсэн хэрэглэгч автоматаар гарна
+  const sessionId = readSession();
   const user = sessionId ? db.users.find((u) => u.id === sessionId && u.status === 'active') || null : null;
 
   const start = (u) => {
@@ -25,10 +26,17 @@ export function AuthProvider({ children }) {
     return u;
   };
   const login = useCallback(async (email, password) => start(await apiLogin(email, password)), []);
-  const register = useCallback(async (data) => start(await apiRegister(data)), []);
-  const logout = useCallback(() => {
+  const register = useCallback(async (data) => {
+    try {
+      return start(await apiRegister(data));
+    } finally {
+      setSessionId(readSession()); // бүртгэл үүсээд дараагийн алхам амжилтгүй болсон ч нэвтэрсэн хэвээр
+    }
+  }, []);
+  const logout = useCallback(async () => {
     localStorage.removeItem(SESSION_KEY);
     setSessionId(null);
+    await apiLogout().catch(() => {});
   }, []);
 
   return <AuthCtx.Provider value={{ user, login, register, logout }}>{children}</AuthCtx.Provider>;

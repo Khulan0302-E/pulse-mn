@@ -1,11 +1,14 @@
 // INT-004 FileStorage: файлыг хадгалж fileURL буцаана.
-// Энэ хувилбарт браузерын IndexedDB-д хадгална. Жинхэнэ серверт шилжүүлэхдээ
-// uploadFile / getFileBlob функцийг REST дуудлагаар солиход хангалттай.
+//  • Supabase горим: Supabase Storage (media — нийтэд нээлттэй, verification-docs — хаалттай)
+//  • Демо горим эсвэл офлайн үед: браузерын IndexedDB (pulsefile://...)
 import { FILE_RULES } from './constants';
+import { isRemote, supabase } from './supabase';
 
 const DB_NAME = 'pulse_files';
 const STORE = 'files';
 export const FILE_PREFIX = 'pulsefile://';
+export const PRIVATE_PREFIX = 'sbprivate://';
+export const isLocalFile = (url) => Boolean(url && url.startsWith(FILE_PREFIX));
 
 let dbPromise;
 function openDb() {
@@ -38,21 +41,51 @@ export function uid() {
   return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export async function uploadFile(blob) {
+/**
+ * @param {Blob} blob
+ * @param {'media'|'verification'} kind
+ * @param {string} [name] файлын нэр (өргөтгөлийг авна)
+ */
+export async function uploadFile(blob, kind = 'media', name = blob?.name) {
+  if (isRemote && navigator.onLine) {
+    const { data } = await supabase.auth.getSession();
+    const folder = data.session?.user?.id;
+    if (!folder) throw new Error('Файл байршуулахын тулд нэвтэрнэ үү.');
+    const ext = (name || '').split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+    const bucket = kind === 'verification' ? 'verification-docs' : 'media';
+    const path = `${folder}/${uid()}.${ext}`;
+    const { error } = await supabase.storage.from(bucket).upload(path, blob, {
+      contentType: blob.type || undefined,
+      upsert: false,
+    });
+    if (error) throw error;
+    return kind === 'verification'
+      ? `${PRIVATE_PREFIX}${bucket}/${path}`
+      : supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  }
   const id = uid();
   await tx('readwrite', (s) => s.put(blob, id));
   return FILE_PREFIX + id;
 }
 
 export async function getFileBlob(fileUrl) {
-  if (!fileUrl || !fileUrl.startsWith(FILE_PREFIX)) return null;
+  if (!isLocalFile(fileUrl)) return null;
   return tx('readonly', (s) => s.get(fileUrl.slice(FILE_PREFIX.length)));
 }
 
 const urlCache = new Map();
 export async function resolveFileUrl(fileUrl) {
   if (!fileUrl) return null;
-  if (!fileUrl.startsWith(FILE_PREFIX)) return fileUrl;
+  if (fileUrl.startsWith(PRIVATE_PREFIX)) {
+    // Хаалттай баримт: 10 минутын хугацаатай холбоос
+    if (!isRemote) return null;
+    const rest = fileUrl.slice(PRIVATE_PREFIX.length);
+    const bucket = rest.slice(0, rest.indexOf('/'));
+    const path = rest.slice(bucket.length + 1);
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 600);
+    return error ? null : data.signedUrl;
+  }
+  if (!isLocalFile(fileUrl)) return fileUrl;
   if (urlCache.has(fileUrl)) return urlCache.get(fileUrl);
   const blob = await getFileBlob(fileUrl);
   if (!blob) return null;

@@ -22,14 +22,18 @@ export default function Verifications() {
   const count = (s) => db.verifications.filter((v) => v.status === s).length;
 
   const openDoc = async (v) => {
+    const win = window.open('', '_blank'); // попап хориглохоос сэргийлж эхлээд нээнэ
     const url = await resolveFileUrl(v.fileUrl).catch(() => null);
-    if (url) window.open(url, '_blank', 'noopener');
-    else toast.error('Файл олдсонгүй (жишээ өгөгдөлд файл хавсаргаагүй байж болно).');
+    if (url && win) win.location.href = url;
+    else {
+      win?.close();
+      toast.error('Файл олдсонгүй (жишээ өгөгдөлд файл хавсаргаагүй байж болно).');
+    }
   };
 
-  const act = (v, approve, why = '') => {
+  const act = async (v, approve, why = '') => {
     try {
-      decideVerification(user, v.id, approve, why);
+      await decideVerification(user, v.id, approve, why);
       toast.success(approve ? 'Сэтгүүлчийг баталгаажууллаа.' : 'Хүсэлтийг татгалзаж, шалтгааныг мэдэгдлээ.');
       setRejecting(null);
       setReason('');

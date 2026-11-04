@@ -1,5 +1,5 @@
 // FR-INT-001, INT-001, INT-002: цаг агаар, валютын ханшийг API-аас татах
-import { getDb, mutate, nextId, now, addLog, notifyRole } from '../lib/db';
+import { getDb, mutate, nextId, now, addLog, notifyRole, isRemote, getCurrentUser } from '../lib/db';
 import { ROLES } from '../lib/constants';
 
 export const EXTERNAL_LABELS = { weather: 'Цаг агаар', fx: 'Валютын ханш' };
@@ -48,6 +48,9 @@ function isDue(type) {
   return Date.now() - new Date(s.lastAttemptAt).getTime() >= waitMin * 60000;
 }
 
+// Supabase горимд хуваалцсан хүснэгтэд зөвхөн админ бичнэ; бусад зочин зөвхөн өөрийн браузерт шинэчилнэ
+const shared = () => ({ sync: !isRemote || getCurrentUser()?.role === 'admin' });
+
 const inflight = {};
 export function refreshExternal(type, { force = false } = {}) {
   if (!force && (!isDue(type) || !navigator.onLine)) return Promise.resolve();
@@ -65,7 +68,7 @@ export function refreshExternal(type, { force = false } = {}) {
       const json = await res.json();
       const rows = type === 'weather' ? parseWeather(json, s) : parseFx(json, s);
       if (!rows.length) throw new Error('Хоосон хариу ирлээ');
-      mutate((d) => {
+      await mutate((d) => {
         d.external = d.external.filter((r) => r.type !== type);
         rows.forEach((r) => d.external.push({ id: nextId(d, 'external'), ...r }));
         const st = d.settings[type];
@@ -73,10 +76,10 @@ export function refreshExternal(type, { force = false } = {}) {
         st.lastAttemptAt = now();
         st.lastSuccessAt = now();
         st.lastError = null;
-      });
+      }, shared());
     } catch (e) {
       const msg = e.name === 'AbortError' ? 'Хариу өгөх хугацаа хэтэрсэн' : e.message || 'Холболтын алдаа';
-      mutate((d) => {
+      await mutate((d) => {
         const st = d.settings[type];
         // 2а: сүүлд амжилттай татсан өгөгдлийг хэвээр үлдээж, админд мэдэгдэнэ
         if (!st.lastError) {
@@ -86,7 +89,7 @@ export function refreshExternal(type, { force = false } = {}) {
         st.lastAttemptAt = now();
         st.lastError = msg;
         st.lastErrorAt = now();
-      });
+      }, shared()).catch(() => {});
     } finally {
       inflight[type] = null;
     }

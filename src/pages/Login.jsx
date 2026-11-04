@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { LogoMark } from '../components/Logo';
 import { Field, Alert, Spinner } from '../components/ui';
 import { WORKSPACE_HOME } from '../components/Layout';
+import { isRemote } from '../lib/db';
 
 const DEMO = [
   { email: 'journalist@pulse.mn', password: 'journal123', label: 'Сэтгүүлч (баталгаажсан)' },
@@ -65,7 +66,7 @@ export default function Login() {
         <p className="center muted small mt-16">
           Бүртгэлгүй юу? <Link to="/register" className="link">Бүртгүүлэх</Link>
         </p>
-        <div className="demo">
+        {!isRemote && <div className="demo">
           <div className="demo-title">Туршилтын бүртгэлүүд</div>
           <div className="demo-list">
             {DEMO.map((d) => (
@@ -75,7 +76,7 @@ export default function Login() {
               </button>
             ))}
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );

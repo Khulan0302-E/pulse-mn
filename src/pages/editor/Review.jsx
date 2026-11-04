@@ -44,12 +44,12 @@ export default function Review() {
   const journalist = userById(db, news.journalistId);
   const ver = latestVerification(db, news.journalistId);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setErrors({});
     setBusy(true);
     try {
-      decide(user, id, {
+      await decide(user, id, {
         decision, comment, publishMode: mode, checks,
         scheduledAt: mode === 'schedule' && when ? new Date(when).toISOString() : null,
       });

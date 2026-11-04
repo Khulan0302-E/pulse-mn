@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
 import { useToast } from './context/ToastContext';
-import { maybeAutoBackup } from './lib/db';
+import { maybeAutoBackup, reloadRemote, isRemote } from './lib/db';
 import { flushOutbox } from './lib/outbox';
 import { runScheduler, processOutboxItem } from './api/news';
 import { refreshExternal } from './api/external';
@@ -39,19 +39,23 @@ function useBackgroundJobs() {
 
   // Товлосон нийтлэл, гадаад API, өдөр тутмын нөөц
   useEffect(() => {
+    let n = 0;
     const tick = () => {
-      try {
-        runScheduler();
-      } catch {
-        /* дараагийн удаа дахин оролдоно */
-      }
+      // Supabase горимд бусад хэрэглэгчийн өөрчлөлтийг 30 секунд тутам татна
+      if (isRemote && n++ > 0) reloadRemote().catch(() => {});
+      runScheduler().catch(() => {}); // дараагийн удаа дахин оролдоно
       refreshExternal('weather');
       refreshExternal('fx');
       maybeAutoBackup();
     };
     tick();
     const t = setInterval(tick, 30000);
-    return () => clearInterval(t);
+    const onFocus = () => isRemote && reloadRemote().catch(() => {});
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   // NFR-PERF-002: холболт сэргэхэд түр хадгалсныг илгээнэ

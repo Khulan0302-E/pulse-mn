@@ -28,7 +28,7 @@ export default function Notifications() {
   };
 
   const open = (n) => {
-    if (!n.read) markRead(user, n.id);
+    if (!n.read) markRead(user, n.id).catch(() => {});
     const to = target(n);
     if (to) nav(to);
   };
@@ -41,7 +41,7 @@ export default function Notifications() {
           <p>{unread ? `${unread} уншаагүй мэдэгдэл` : 'Бүх мэдэгдлийг уншсан'}</p>
         </div>
         {unread > 0 && (
-          <button className="btn btn-secondary btn-sm" onClick={() => markAllRead(user)}>
+          <button className="btn btn-secondary btn-sm" onClick={() => markAllRead(user).catch(() => {})}>
             <CheckCheck size={15} /> Бүгдийг уншсан болгох
           </button>
         )}

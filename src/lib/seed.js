@@ -27,7 +27,7 @@ function makeSamplePdf(text) {
   return new Blob([out], { type: 'application/pdf' });
 }
 
-const ARTICLES = [
+export const SAMPLE_ARTICLES = [
   {
     cat: 1, loc: ['Дорнод', 'Хэрлэн'], author: 3, h: 2, views: 412,
     title: 'Аймгийн ИТХ ирэх оны төсвийн төслийг хэлэлцэж эхэллээ',
@@ -165,7 +165,7 @@ export async function buildSeed() {
   const news = [];
   const versions = [];
   const decisions = [];
-  ARTICLES.forEach((a, i) => {
+  SAMPLE_ARTICLES.forEach((a, i) => {
     const id = i + 1;
     const n = {
       id, journalistId: a.author, title: a.title, content: a.content, categoryId: a.cat,
