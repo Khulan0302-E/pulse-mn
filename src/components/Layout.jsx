@@ -60,7 +60,7 @@ function UserMenu({ user, onLogout }) {
               <LayoutDashboard size={16} /> Ажлын орчин
             </Link>
           )}
-          <Link className="menu-item" to="/notifications" onClick={() => setOpen(false)}>
+          <Link className="menu-item" to={ws ? `${ws}/notifications` : '/notifications'} onClick={() => setOpen(false)}>
             <Bell size={16} /> Мэдэгдэл
           </Link>
           <button className="menu-item" onClick={() => { setOpen(false); onLogout(); }}>
@@ -93,7 +93,7 @@ function Header() {
         <div className="header-actions">
           {user ? (
             <>
-              <Link to="/notifications" className="icon-btn" aria-label="Мэдэгдэл">
+              <Link to={ws ? `${ws}/notifications` : '/notifications'} className="icon-btn" aria-label="Мэдэгдэл">
                 <Bell size={18} />
                 {unread > 0 && <span className="dot">{unread > 9 ? '9+' : unread}</span>}
               </Link>

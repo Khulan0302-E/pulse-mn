@@ -89,6 +89,7 @@ export default function App() {
           <Route path="edit/:id" element={<Keyed Component={DraftEditor} />} />
           <Route path="news/:id" element={<DraftDetail />} />
           <Route path="verification" element={<Verification />} />
+          <Route path="notifications" element={<Notifications embedded />} />
         </Route>
 
         <Route path="e" element={<RequireAuth roles={[ROLES.EDITOR]}><WorkspaceLayout /></RequireAuth>}>
@@ -98,6 +99,7 @@ export default function App() {
           <Route path="published" element={<Published />} />
           <Route path="published/:id/edit" element={<Keyed Component={EditPublished} />} />
           <Route path="verifications" element={<Verifications />} />
+          <Route path="notifications" element={<Notifications embedded />} />
         </Route>
 
         <Route path="a" element={<RequireAuth roles={[ROLES.ADMIN]}><WorkspaceLayout /></RequireAuth>}>
@@ -105,6 +107,7 @@ export default function App() {
           <Route path="users" element={<Users />} />
           <Route path="integrations" element={<Integrations />} />
           <Route path="system" element={<System />} />
+          <Route path="notifications" element={<Notifications embedded />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

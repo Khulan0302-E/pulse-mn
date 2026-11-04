@@ -47,7 +47,9 @@ export function WorkspaceLayout() {
     review: db.news.filter((n) => n.status === STATUS.REVIEW).length,
     scheduled: db.news.filter((n) => n.status === STATUS.SCHEDULED).length,
     pendingVerify: db.verifications.filter((v) => v.status === VERIFY.PENDING).length,
+    unread: db.notifications.filter((n) => n.userId === user.id && !n.read).length,
   };
+  const base = { journalist: '/j', editor: '/e', admin: '/a' }[user.role];
   return (
     <div className="container ws">
       <aside className="card ws-nav">
@@ -65,8 +67,9 @@ export function WorkspaceLayout() {
             {badge && counts[badge] > 0 && <span className="ws-count">{counts[badge]}</span>}
           </NavLink>
         ))}
-        <NavLink to="/notifications" className="ws-link">
+        <NavLink to={`${base}/notifications`} className="ws-link">
           <Bell size={17} /> <span>Мэдэгдэл</span>
+          {counts.unread > 0 && <span className="ws-count">{counts.unread}</span>}
         </NavLink>
       </aside>
       <section className="ws-main">

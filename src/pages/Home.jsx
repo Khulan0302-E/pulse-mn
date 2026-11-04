@@ -54,7 +54,12 @@ export default function Home() {
           <span className="muted">{items.length} мэдээ</span>
         </div>
       )}
-      {featured.length > 0 && <FeaturedCarousel items={featured} />}
+      {featured.length > 0 && (
+        <section aria-labelledby="featured-title">
+          <h2 id="featured-title" className="section-title top">Онцлох мэдээ</h2>
+          <FeaturedCarousel items={featured} />
+        </section>
+      )}
       <div className="home-grid">
         <div className="home-main">
           {!lead ? (

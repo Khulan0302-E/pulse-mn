@@ -7,7 +7,7 @@ import { timeAgo, fmtDate } from '../lib/format';
 import { markRead, markAllRead } from '../api/news';
 import { Empty } from '../components/ui';
 
-export default function Notifications() {
+export default function Notifications({ embedded = false }) {
   const db = useDb();
   const { user } = useAuth();
   const nav = useNavigate();
@@ -35,7 +35,7 @@ export default function Notifications() {
   };
 
   return (
-    <div className="container page narrow">
+    <div className={embedded ? '' : 'container page narrow'}>
       <div className="page-head">
         <div>
           <h1>Мэдэгдэл</h1>
