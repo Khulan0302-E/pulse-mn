@@ -1,4 +1,4 @@
-// FR-PUB-003: нийтлэгдсэн мэдээг хайх, засварлах
+// FR-PUB-003: нийтлэгдсэн мэдээг хайх, засварлах, онцлох болгох, устгах
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Newspaper, PenLine, ExternalLink } from 'lucide-react';
@@ -8,14 +8,17 @@ import { STATUS, CATEGORIES } from '../../lib/constants';
 import { fmtDate } from '../../lib/format';
 import { editorList, categoryName, userById } from '../../api/news';
 import { Empty } from '../../components/ui';
+import { FeaturedToggle, DeleteNewsButton } from '../../components/NewsActions';
 
 export default function Published() {
   const db = useDb();
   const { user } = useAuth();
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
+  const [onlyFeatured, setOnlyFeatured] = useState(false);
   const list = editorList(user, STATUS.PUBLISHED)
     .filter((n) => !cat || n.categoryId === Number(cat))
+    .filter((n) => !onlyFeatured || n.featured)
     .filter((n) => !q.trim() || n.title.toLowerCase().includes(q.trim().toLowerCase()));
 
   return (
@@ -23,7 +26,7 @@ export default function Published() {
       <div className="page-head">
         <div>
           <h1>Нийтлэгдсэн</h1>
-          <p>Засвар бүр хувилбарын түүхэнд бүртгэгдэнэ.</p>
+          <p>Засвар бүр хувилбарын түүхэнд бүртгэгдэнэ. ☆ дээр дарж нүүр хуудасны «Онцлох мэдээ»-нд гаргана.</p>
         </div>
       </div>
       <div className="card">
@@ -36,16 +39,21 @@ export default function Published() {
             <option value="">Бүх төрөл</option>
             {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
+          <label className="check nowrap">
+            <input type="checkbox" checked={onlyFeatured} onChange={(e) => setOnlyFeatured(e.target.checked)} />
+            <span>Зөвхөн онцлох</span>
+          </label>
         </div>
         {!list.length ? (
           <Empty icon={Newspaper} title="Нийтлэл олдсонгүй" />
         ) : (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Гарчиг</th><th>Төрөл</th><th>Сэтгүүлч</th><th>Нийтэлсэн</th><th>Хувилбар</th><th>Үзэлт</th><th /></tr></thead>
+              <thead><tr><th title="Онцлох мэдээ">Онцлох</th><th>Гарчиг</th><th>Төрөл</th><th>Сэтгүүлч</th><th>Нийтэлсэн</th><th>Хувилбар</th><th>Үзэлт</th><th /></tr></thead>
               <tbody>
                 {list.map((n) => (
                   <tr key={n.id}>
+                    <td><FeaturedToggle news={n} /></td>
                     <td><span className="cell-title">{n.title}</span></td>
                     <td>{categoryName(db, n.categoryId)}</td>
                     <td className="nowrap">{userById(db, n.journalistId)?.fullName}</td>
@@ -56,6 +64,7 @@ export default function Published() {
                       <div className="row nowrap">
                         <Link to={`/news/${n.id}`} className="icon-btn sm" title="Үзэх"><ExternalLink size={15} /></Link>
                         <Link to={`/e/published/${n.id}/edit`} className="btn btn-secondary btn-sm"><PenLine size={14} /> Засах</Link>
+                        <DeleteNewsButton news={n} />
                       </div>
                     </td>
                   </tr>

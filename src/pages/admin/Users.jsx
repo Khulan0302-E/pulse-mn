@@ -1,13 +1,27 @@
 // Хэрэглэгчийн эрх удирдах (Эрхийн матриц: Админ)
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { useDb } from '../../lib/useDb';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { ROLE_LABELS, USER_STATUS, USER_STATUS_LABELS } from '../../lib/constants';
+import { ROLES, ROLE_LABELS, USER_STATUS, USER_STATUS_LABELS, VERIFY_LABELS, VERIFY_TONE } from '../../lib/constants';
 import { fmtDate, initials } from '../../lib/format';
 import { updateUser } from '../../api/admin';
+import { latestVerification } from '../../api/auth';
 import { Badge, Confirm } from '../../components/ui';
+
+/** Сэтгүүлчийн хамгийн сүүлийн баримтын шийдвэр (бусад рольд хамаарахгүй) */
+function VerifyCell({ db, u }) {
+  if (u.role !== ROLES.JOURNALIST) return <span className="muted">—</span>;
+  const v = latestVerification(db, u.id);
+  if (!v) return <span className="muted small">Баримт илгээгээгүй</span>;
+  return (
+    <Link to="/a/verifications" title={v.reason ? `Шалтгаан: ${v.reason}` : undefined}>
+      <Badge tone={VERIFY_TONE[v.status]}>{VERIFY_LABELS[v.status]}</Badge>
+    </Link>
+  );
+}
 
 export default function Users() {
   const db = useDb();
@@ -34,7 +48,7 @@ export default function Users() {
       <div className="page-head">
         <div>
           <h1>Хэрэглэгчид</h1>
-          <p>Роль болон бүртгэлийн төлвийг удирдана. Нийт {db.users.length}.</p>
+          <p>Роль болон бүртгэлийн төлвийг удирдана. Нийт {db.users.length}. «Бүртгэл» нь нэвтрэх эрх (Идэвхтэй / Түдгэлзсэн), «Баталгаажуулалт» нь сэтгүүлчийн баримтын шийдвэр.</p>
         </div>
       </div>
       <div className="card">
@@ -50,7 +64,7 @@ export default function Users() {
         </div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Хэрэглэгч</th><th>Утас</th><th>Байгууллага</th><th>Роль</th><th>Төлөв</th><th>Бүртгэсэн</th><th /></tr></thead>
+            <thead><tr><th>Хэрэглэгч</th><th>Утас</th><th>Байгууллага</th><th>Роль</th><th>Баталгаажуулалт</th><th>Бүртгэл</th><th>Бүртгэсэн</th><th /></tr></thead>
             <tbody>
               {list.map((u) => {
                 const self = u.id === user.id;
@@ -72,6 +86,7 @@ export default function Users() {
                         {Object.entries(ROLE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
                     </td>
+                    <td><VerifyCell db={db} u={u} /></td>
                     <td><Badge tone={u.status === USER_STATUS.ACTIVE ? 'green' : 'red'}>{USER_STATUS_LABELS[u.status]}</Badge></td>
                     <td className="nowrap">{fmtDate(u.createdAt, { time: false })}</td>
                     <td>

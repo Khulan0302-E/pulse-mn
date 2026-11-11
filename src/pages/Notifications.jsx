@@ -15,8 +15,11 @@ export default function Notifications({ embedded = false }) {
   const unread = list.filter((n) => !n.read).length;
 
   const target = (n) => {
-    if (user.role === ROLES.EDITOR && !n.newsId) return '/e/verifications';
-    if (user.role === ROLES.ADMIN && !n.newsId) return '/a/integrations';
+    if (user.role === ROLES.ADMIN && !n.newsId) {
+      // Сэтгүүлчийн баримтын хүсэлт → баталгаажуулах хуудас, API алдаа → интеграц
+      return /баталгаажуулах|баримт/i.test(n.content) ? '/a/verifications' : '/a/integrations';
+    }
+    if (user.role === ROLES.EDITOR && !n.newsId) return '/e';
     if (!n.newsId) return null;
     if (user.role === ROLES.JOURNALIST) return `/j/news/${n.newsId}`;
     if (user.role === ROLES.EDITOR) {

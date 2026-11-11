@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { useDb } from '../lib/useDb';
 import { SESSION_KEY } from '../lib/db';
-import { login as apiLogin, register as apiRegister, logout as apiLogout } from '../api/auth';
+import { login as apiLogin, register as apiRegister, logout as apiLogout, verifySignupOtp } from '../api/auth';
 
 const AuthCtx = createContext(null);
 
@@ -33,13 +33,20 @@ export function AuthProvider({ children }) {
       setSessionId(readSession()); // бүртгэл үүсээд дараагийн алхам амжилтгүй болсон ч нэвтэрсэн хэвээр
     }
   }, []);
+  const confirmOtp = useCallback(async (email, token, pending) => {
+    try {
+      return start(await verifySignupOtp(email, token, pending));
+    } finally {
+      setSessionId(readSession());
+    }
+  }, []);
   const logout = useCallback(async () => {
     localStorage.removeItem(SESSION_KEY);
     setSessionId(null);
     await apiLogout().catch(() => {});
   }, []);
 
-  return <AuthCtx.Provider value={{ user, login, register, logout }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ user, login, register, confirmOtp, logout }}>{children}</AuthCtx.Provider>;
 }
 
 export const useAuth = () => useContext(AuthCtx);

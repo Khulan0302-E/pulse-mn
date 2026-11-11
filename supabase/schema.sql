@@ -67,6 +67,7 @@ create table if not exists public.news (
   published_at        timestamptz,
   updated_at          timestamptz not null default now(),
   views               int not null default 0,
+  featured            boolean not null default false,   -- Редактор «Онцлох мэдээ» гэж тэмдэглэнэ
   -- Зохиогчийн эрхийн зөвшөөрөлгүйгээр илгээх боломжгүй (FR-CNT-001)
   constraint news_consent_required check (status = 'draft' or copyright_consent),
   -- Нийтлэл бүр эх сурвалжтай (NFR-TRN-002)
@@ -288,9 +289,9 @@ drop policy if exists verifications_insert on public.verifications;
 create policy verifications_insert on public.verifications for insert
   with check (user_id = public.my_profile_id() and status = 'pending' and public.my_role() = 'journalist');
 drop policy if exists verifications_update on public.verifications;
--- Сэтгүүлчийн баримтыг Редактор баталгаажуулна
+-- Сэтгүүлчийн баримтыг Админ баталгаажуулна
 create policy verifications_update on public.verifications for update
-  using (public.my_role() = 'editor') with check (public.my_role() = 'editor');
+  using (public.my_role() = 'admin') with check (public.my_role() = 'admin');
 
 -- categories, locations: бүгд уншина
 drop policy if exists categories_select on public.categories;
@@ -321,6 +322,10 @@ create policy news_update on public.news for update
     or public.is_staff()
   );
 
+-- Редактор, Админ мэдээ устгана (media, decisions, news_versions нь cascade-аар устна)
+drop policy if exists news_delete on public.news;
+create policy news_delete on public.news for delete using (public.is_staff());
+
 -- media
 drop policy if exists media_select on public.media;
 create policy media_select on public.media for select
@@ -342,6 +347,8 @@ create policy decisions_select on public.decisions for select
 drop policy if exists decisions_insert on public.decisions;
 create policy decisions_insert on public.decisions for insert
   with check (public.my_role() = 'editor' and editor_id = public.my_profile_id());
+drop policy if exists decisions_delete on public.decisions;
+create policy decisions_delete on public.decisions for delete using (public.is_staff());
 
 -- news_versions
 drop policy if exists versions_select on public.news_versions;
@@ -355,7 +362,7 @@ create policy versions_insert on public.news_versions for insert
                           and (n.journalist_id = public.my_profile_id() or public.is_staff())));
 drop policy if exists versions_delete on public.news_versions;
 create policy versions_delete on public.news_versions for delete
-  using (user_id = public.my_profile_id());
+  using (user_id = public.my_profile_id() or public.is_staff());
 
 -- notifications: өөрийнхөө мэдэгдлийг харна; нэвтэрсэн хэрэглэгч бусдад мэдэгдэл илгээж болно
 drop policy if exists notifications_select on public.notifications;
@@ -422,15 +429,15 @@ create policy "pulse media upload" on storage.objects for insert to authenticate
   with check (bucket_id = 'media' and (storage.foldername(name))[1] = auth.uid()::text);
 drop policy if exists "pulse media delete" on storage.objects;
 create policy "pulse media delete" on storage.objects for delete to authenticated
-  using (bucket_id = 'media' and (storage.foldername(name))[1] = auth.uid()::text);
+  using (bucket_id = 'media' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_staff()));
 drop policy if exists "pulse docs upload" on storage.objects;
 create policy "pulse docs upload" on storage.objects for insert to authenticated
   with check (bucket_id = 'verification-docs' and (storage.foldername(name))[1] = auth.uid()::text);
--- Баримтыг зөвхөн эзэн нь болон редактор үзнэ
+-- Баримтыг зөвхөн эзэн нь болон админ үзнэ
 drop policy if exists "pulse docs read" on storage.objects;
 create policy "pulse docs read" on storage.objects for select to authenticated
   using (bucket_id = 'verification-docs'
-         and ((storage.foldername(name))[1] = auth.uid()::text or public.my_role() = 'editor'));
+         and ((storage.foldername(name))[1] = auth.uid()::text or public.my_role() = 'admin'));
 
 -- ---------- Анхны өгөгдөл ----------
 

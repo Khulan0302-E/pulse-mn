@@ -4,7 +4,7 @@
 import { getDb, mutate, nextId, now, addLog, notify, notifyRole, isRemote, getCurrentUser } from '../lib/db';
 import { uploadFile, getFileBlob, isLocalFile } from '../lib/files';
 import { supabase } from '../lib/supabase';
-import { STATUS, ROLES, DECISION, DECISION_LABELS, LIMITS, MAX_MEDIA_PER_NEWS } from '../lib/constants';
+import { STATUS, ROLES, ROLE_LABELS, DECISION, DECISION_LABELS, LIMITS, MAX_MEDIA_PER_NEWS } from '../lib/constants';
 import { AppError, assertRole, isVerifiedJournalist } from './auth';
 
 // ---------- Унших ----------
@@ -285,7 +285,7 @@ export function editorList(user, status) {
 }
 
 /** FR-EDT-004: шийдвэр гаргах, тайлбар өгөх, нийтлэх/товлох */
-export async function decide(user, id, { decision, comment = '', publishMode = 'now', scheduledAt = null, checks = {} }) {
+export async function decide(user, id, { decision, comment = '', publishMode = 'now', scheduledAt = null, checks = {}, featured = false }) {
   assertRole(user, ROLES.EDITOR);
   const text = comment.trim();
   if (!Object.values(DECISION).includes(decision)) throw new AppError('Шийдвэрээ сонгоно уу.');
@@ -319,6 +319,7 @@ export async function decide(user, id, { decision, comment = '', publishMode = '
     if (decision === DECISION.RETURN) n.status = STATUS.RETURNED;
     if (decision === DECISION.REJECT) n.status = STATUS.REJECTED;
     if (decision === DECISION.APPROVE) {
+      if (featured) n.featured = true;
       if (publishMode === 'schedule') {
         n.status = STATUS.SCHEDULED;
         n.scheduledAt = when.toISOString();
@@ -387,6 +388,43 @@ export async function updatePublished(user, id, data) {
     addLog(d, user.id, 'Нийтлэл шинэчилсэн', `Мэдээ #${id} v${n.version}`);
     return id;
   });
+}
+
+/** Редактор «Онцлох мэдээ» эсэхийг тэмдэглэнэ */
+export async function setFeatured(user, id, featured) {
+  assertRole(user, ROLES.EDITOR, ROLES.ADMIN);
+  await mutate((d) => {
+    const n = d.news.find((x) => x.id === id);
+    if (!n) throw new AppError('Мэдээ олдсонгүй.');
+    n.featured = Boolean(featured);
+    addLog(d, user.id, featured ? 'Онцлох болгосон' : 'Онцлохоос хассан', `Мэдээ #${id}`);
+  });
+}
+
+/** Редактор, Админ мэдээг бүрмөсөн устгана (зураг, шийдвэр, хувилбарын түүхтэй нь) */
+export async function deleteNews(user, id) {
+  assertRole(user, ROLES.EDITOR, ROLES.ADMIN);
+  const existing = getDb().news.find((n) => n.id === id);
+  if (!existing) throw new AppError('Мэдээ олдсонгүй.');
+  const files = getDb().media.filter((m) => m.newsId === id).map((m) => m.fileUrl);
+  await mutate((d) => {
+    const n = d.news.find((x) => x.id === id);
+    if (!n) throw new AppError('Мэдээ олдсонгүй.');
+    d.news = d.news.filter((x) => x.id !== id);
+    d.media = d.media.filter((x) => x.newsId !== id);
+    d.decisions = d.decisions.filter((x) => x.newsId !== id);
+    d.versions = d.versions.filter((x) => x.newsId !== id);
+    if (n.journalistId !== user.id) {
+      notify(d, n.journalistId, `${ROLE_LABELS[user.role]} таны «${n.title}» мэдээг устгалаа.`);
+    }
+    addLog(d, user.id, 'Мэдээ устгасан', `Мэдээ #${id} «${n.title.slice(0, 50)}»`);
+  });
+  // Storage-оос зураг, бичлэгийг цэвэрлэнэ (амжилтгүй болсон ч мэдээ аль хэдийн устсан)
+  if (isRemote) {
+    const marker = '/storage/v1/object/public/media/';
+    const paths = files.filter((u) => u?.includes(marker)).map((u) => decodeURIComponent(u.split(marker)[1]));
+    if (paths.length) supabase.storage.from('media').remove(paths).catch(() => {});
+  }
 }
 
 // ---------- Мэдэгдэл ----------

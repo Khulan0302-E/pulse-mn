@@ -11,24 +11,73 @@ import Logo from './Logo';
 
 export const WORKSPACE_HOME = { journalist: '/j', editor: '/e', admin: '/a' };
 
+export const INFO_PATH = '/tsag-agaar-hansh';
+
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+const fmtRate = (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+/** Валютын ханшийг холимог дарааллаар ээлжлэн, бүдгэрч солигдох байдлаар харуулна */
+function FxTicker({ rows }) {
+  const keys = rows.map((r) => r.key).join(',');
+  const [order, setOrder] = useState([]);
+  const [step, setStep] = useState(0);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    setOrder(shuffle(keys ? keys.split(',') : []));
+    setStep(0);
+  }, [keys]);
+  useEffect(() => {
+    if (order.length < 2) return undefined;
+    let fade;
+    const t = setInterval(() => {
+      setVisible(false);
+      fade = setTimeout(() => {
+        setStep((x) => x + 1);
+        setVisible(true);
+      }, 400);
+    }, 3500);
+    return () => {
+      clearInterval(t);
+      clearTimeout(fade);
+    };
+  }, [order.length]);
+  // Бүтэн тойрог дуусахад дарааллыг дахин холино
+  useEffect(() => {
+    if (order.length > 1 && step > 0 && step % order.length === 0) setOrder((o) => shuffle(o));
+  }, [step, order.length]);
+  const row = rows.find((r) => r.key === order[order.length ? step % order.length : 0]) || rows[0];
+  if (!row) return null;
+  return (
+    <span className={`tb-item tb-fx ${visible ? 'in' : 'out'}`}>
+      {row.key} <strong>₮{fmtRate(row.value)}</strong>
+    </span>
+  );
+}
+
 function TopBar() {
   const db = useDb();
   const weather = db.external.find((r) => r.type === 'weather');
-  const usd = db.external.find((r) => r.type === 'fx' && r.key === 'USD');
-  const eur = db.external.find((r) => r.type === 'fx' && r.key === 'EUR');
+  const fx = db.external.filter((r) => r.type === 'fx');
   return (
     <div className="topbar">
       <div className="container topbar-inner">
-        <span>{fmtLongDate()}</span>
-        <div className="topbar-right">
+        <span className="hide-sm">{fmtLongDate()}</span>
+        <Link to={INFO_PATH} className="topbar-right" title="Цаг агаар, валютын ханшийн дэлгэрэнгүй">
           {weather && (
             <span className="tb-item">
               <WeatherIcon code={weather.code} size={14} /> {weather.key} {Math.round(weather.temp)}°C
             </span>
           )}
-          {usd && <span className="tb-item">USD ₮{Number(usd.value).toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>}
-          {eur && <span className="tb-item hide-sm">EUR ₮{Number(eur.value).toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>}
-        </div>
+          {fx.length > 0 && <FxTicker rows={fx} />}
+          <span className="tb-more" aria-hidden="true">Дэлгэрэнгүй ›</span>
+        </Link>
       </div>
     </div>
   );

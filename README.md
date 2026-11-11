@@ -39,7 +39,7 @@ Production build: `npm run build` → `dist/` хавтас.
 
 | ID | Хаана | Тайлбар |
 |---|---|---|
-| FR-AUTH-001 | `pages/Register.jsx`, `pages/journalist/Verification.jsx`, `pages/admin/Verifications.jsx` | Баримт (үнэмлэх / МСНЭ / диплом) хавсаргаж бүртгүүлэх, редактор баталгаажуулах/шалтгаантай татгалзах (эх баримтад Админ гэж заасныг багаар өөрчилсөн), дахин илгээх |
+| FR-AUTH-001 | `pages/Register.jsx`, `pages/journalist/Verification.jsx`, `pages/admin/Verifications.jsx` | Иргэн (анхдагч) эсвэл сэтгүүлчээр бүртгүүлэх, и-мэйлийн код (OTP, [docs/email-otp.md](docs/email-otp.md)), сэтгүүлч баримт (үнэмлэх / МСНЭ / диплом) хавсаргаж **Админ** баталгаажуулах/шалтгаантай татгалзах, дахин илгээх |
 | FR-CNT-001 | `pages/journalist/DraftEditor.jsx`, `components/NewsForm.jsx` | Зураг/бичлэг, аймаг-сум, зохиогчийн эрхийн зөвшөөрөл, урьдчилсан харагдац |
 | FR-CNT-003 | `pages/journalist/Dashboard.jsx`, `DraftDetail.jsx` | Түүх, төлөв/огноогоор шүүх, редакторын шийдвэр, шалтгаан |
 | FR-CNT-004 | `DraftEditor.jsx` (resubmit горим) | Буцаагдсан ноорог засаж дахин илгээх, өөрчлөлтгүй бол баталгаажуулалт асууна |
@@ -71,16 +71,19 @@ src/
 1. supabase.com дээр шинэ төсөл үүсгэнэ (Region: Singapore эсвэл Tokyo ойр).
 2. **SQL Editor → New query** → `supabase/schema.sql`-ийн агуулгыг бүтнээр нь хуулж **Run**.
    Хүснэгт, эрхийн дүрэм (RLS), файл хадгалах bucket, аймаг-сумын жагсаалт үүснэ.
-3. **Authentication → Sign In / Providers → Email** хэсэгт **Confirm email**-ийг унтраана
-   (асаалттай бол сэтгүүлч бүртгүүлэх үед баримтаа хавсаргаж чадахгүй).
+3. И-мэйлийн кодоор (OTP) баталгаажуулах бол [docs/email-otp.md](docs/email-otp.md)-ийн дагуу SMTP тохируулж
+   **Confirm email**-ийг асаана. Түр туршихдаа **Authentication → Sign In / Providers → Email → Confirm email**-ийг унтраавал код асуухгүй.
 4. **Project Settings → API** (эсвэл **API Keys**) хэсгээс Project URL болон `anon` / `publishable` түлхүүрийг хуулна.
    `.env.example`-г `.env.local` нэрээр хуулаад бөглөнө. `service_role` / `secret` түлхүүрийг хэзээ ч бүү ашигла.
 5. `npm install` → `npm run dev`. Сайт дээр админ болох хүнээрээ бүртгүүлнэ.
 6. `supabase/make-admin.sql`-д и-мэйлээ бичээд SQL Editor дээр Run → таныг админ болгоно.
    Дахин нэвтэрч **Админ → Лог ба нөөц → Жишээ мэдээ нэмэх** дарж нүүр хуудсыг дүүргэж болно.
-   Сэтгүүлчийн баримтыг **Редактор** баталгаажуулна — редакторыг **Админ → Хэрэглэгчид** хэсгээс томилно.
+   Сэтгүүлчийн баримтыг **Админ → Сэтгүүлч баталгаажуулах** хэсэгт баталгаажуулна. Редакторыг **Админ → Хэрэглэгчид** хэсгээс томилно.
 7. (Заавал биш) **Database → Extensions → pg_cron** асаагаад `supabase/cron.sql`-ийг Run —
    товлосон нийтлэл минут тутам автоматаар нийтлэгдэнэ. Үгүй бол редактор сайтад орсон үед нийтлэгдэнэ.
+Өмнө нь `schema.sql`-ийг ажиллуулсан төсөлд шинэчлэл бүрийн `supabase/update-*.sql` файлыг SQL Editor дээр Run хийнэ
+(`update-2026-11-11.sql`: Админ баталгаажуулах, «Онцлох мэдээ», мэдээ устгах эрх).
+
 8. **Vercel → Project → Settings → Environment Variables**-д `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`-г нэмээд
    **Deployments → Redeploy**.
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Eye, PenLine, ChevronRight } from 'lucide-react';
 import { useDb } from '../lib/useDb';
 import { useAuth } from '../context/AuthContext';
@@ -9,11 +9,14 @@ import NewsPreview from '../components/NewsPreview';
 import NewsCard from '../components/NewsCard';
 import { WeatherCard, FxCard } from '../components/InfoWidgets';
 import NotFound from './NotFound';
+import { FeaturedToggle, DeleteNewsButton } from '../components/NewsActions';
 
 export default function Article() {
   const db = useDb();
   const { user } = useAuth();
+  const nav = useNavigate();
   const id = Number(useParams().id);
+  const staff = user?.role === ROLES.EDITOR || user?.role === ROLES.ADMIN;
   const news = getPublished(id);
 
   useEffect(() => {
@@ -36,8 +39,14 @@ export default function Article() {
           <NewsPreview news={news} media={mediaFor(db, news.id)} />
           <div className="article-foot">
             <span className="muted small"><Eye size={14} /> {news.views || 0} удаа үзсэн</span>
-            {user?.role === ROLES.EDITOR && (
-              <Link to={`/e/published/${news.id}/edit`} className="btn btn-secondary btn-sm"><PenLine size={15} /> Засварлах</Link>
+            {staff && (
+              <div className="row nowrap">
+                <FeaturedToggle news={news} withLabel />
+                {user.role === ROLES.EDITOR && (
+                  <Link to={`/e/published/${news.id}/edit`} className="btn btn-secondary btn-sm"><PenLine size={15} /> Засварлах</Link>
+                )}
+                <DeleteNewsButton news={news} withLabel onDeleted={() => nav(user.role === ROLES.EDITOR ? '/e/published' : '/a/news')} />
+              </div>
             )}
           </div>
         </div>

@@ -1,12 +1,12 @@
-// Сэтгүүлч баталгаажуулах (Редактор), хэрэглэгчийн эрх, тохиргоо, лог (Админ)
+// Сэтгүүлч баталгаажуулах, хэрэглэгчийн эрх, тохиргоо, лог (Админ)
 import { getDb, mutate, now, addLog, notify, nextId } from '../lib/db';
 import { SAMPLE_ARTICLES } from '../lib/seed';
 import { ROLES, VERIFY, USER_STATUS, ROLE_LABELS, LIMITS } from '../lib/constants';
 import { AppError, assertRole } from './auth';
 
-// Сэтгүүлчийн баримтыг Редактор баталгаажуулна (багийн шийдвэр; эх баримтад Админ гэж заасан)
+// Сэтгүүлчийн баримтыг Админ баталгаажуулна (эрхийн матриц)
 export function listVerifications(user, status) {
-  assertRole(user, ROLES.EDITOR);
+  assertRole(user, ROLES.ADMIN);
   return getDb()
     .verifications.filter((v) => !status || v.status === status)
     .sort((a, b) => (status === VERIFY.PENDING ? a.id - b.id : b.id - a.id));
@@ -14,7 +14,7 @@ export function listVerifications(user, status) {
 
 /** FR-AUTH-001 алхам 4–5 */
 export async function decideVerification(user, id, approve, reason = '') {
-  assertRole(user, ROLES.EDITOR);
+  assertRole(user, ROLES.ADMIN);
   const text = reason.trim();
   if (!approve && !text) throw new AppError('Татгалзах шалтгааныг заавал бичнэ.');
   if (text.length > LIMITS.reason) throw new AppError(`Шалтгаан ${LIMITS.reason} тэмдэгтээс хэтрэхгүй.`);

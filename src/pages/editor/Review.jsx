@@ -30,6 +30,7 @@ export default function Review() {
   const [mode, setMode] = useState('now');
   const [when, setWhen] = useState('');
   const [checks, setChecks] = useState({ facts: false, legal: false });
+  const [featured, setFeaturedFlag] = useState(false);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
 
@@ -50,7 +51,7 @@ export default function Review() {
     setBusy(true);
     try {
       await decide(user, id, {
-        decision, comment, publishMode: mode, checks,
+        decision, comment, publishMode: mode, checks, featured,
         scheduledAt: mode === 'schedule' && when ? new Date(when).toISOString() : null,
       });
       toast.success('Шийдвэр хадгалагдаж, сэтгүүлчид мэдэгдэл очлоо.');
@@ -111,6 +112,10 @@ export default function Review() {
                       </label>
                       {errors.checks && <div className="field-error">{errors.checks}</div>}
                     </div>
+                    <label className="check featured-check">
+                      <input type="checkbox" checked={featured} onChange={(e) => setFeaturedFlag(e.target.checked)} />
+                      <span><strong>Онцлох мэдээ</strong> — нүүр хуудасны «Онцлох мэдээ» хэсэгт гаргах</span>
+                    </label>
                     <div>
                       <div className="label">Нийтлэх</div>
                       <div className="segmented mt-8">
