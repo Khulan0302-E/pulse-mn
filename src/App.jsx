@@ -11,6 +11,7 @@ import Layout from './components/Layout';
 import { RequireAuth, WorkspaceLayout } from './components/Guards';
 import Home from './pages/Home';
 import Article from './pages/Article';
+import WeatherFx from './pages/WeatherFx';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Notifications from './pages/Notifications';
@@ -25,6 +26,7 @@ import Published from './pages/editor/Published';
 import EditPublished from './pages/editor/EditPublished';
 import Verifications from './pages/admin/Verifications';
 import Users from './pages/admin/Users';
+import AdminNews from './pages/admin/News';
 import Integrations from './pages/admin/Integrations';
 import System from './pages/admin/System';
 
@@ -79,6 +81,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="category/:slug" element={<Home />} />
         <Route path="news/:id" element={<Article />} />
+        <Route path="tsag-agaar-hansh" element={<WeatherFx />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
@@ -105,6 +108,7 @@ export default function App() {
           <Route index element={<Users />} />
           <Route path="users" element={<Users />} />
           <Route path="verifications" element={<Verifications />} />
+          <Route path="news" element={<AdminNews />} />
           <Route path="integrations" element={<Integrations />} />
           <Route path="system" element={<System />} />
           <Route path="notifications" element={<Notifications embedded />} />

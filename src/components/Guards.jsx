@@ -35,6 +35,7 @@ const NAV = {
   admin: [
     { to: '/a', label: 'Хэрэглэгчид', icon: Users, end: true },
     { to: '/a/verifications', label: 'Сэтгүүлч баталгаажуулах', icon: BadgeCheck, badge: 'pendingVerify' },
+    { to: '/a/news', label: 'Мэдээ', icon: Newspaper },
     { to: '/a/integrations', label: 'API интеграц', icon: Plug },
     { to: '/a/system', label: 'Лог ба нөөц', icon: ScrollText },
   ],

@@ -1,4 +1,5 @@
 // FR-INT-001: цаг агаар, валютын ханшийг эх сурвалж, татсан цагтай нь харуулна
+import { Link } from 'react-router-dom';
 import { Sun, CloudSun, Cloud, CloudFog, CloudDrizzle, CloudRain, CloudSnow, CloudLightning, AlertTriangle } from 'lucide-react';
 import { useDb } from '../lib/useDb';
 import { fmtDate, timeAgo } from '../lib/format';
@@ -36,7 +37,7 @@ export function WeatherCard() {
   const w = rows[0];
   return (
     <div className="card widget">
-      <div className="widget-head"><h3>Цаг агаар</h3><span className="muted small">{s.city}</span></div>
+      <div className="widget-head"><h3>Цаг агаар</h3><Link to="/tsag-agaar-hansh" className="link">7 хоног ›</Link></div>
       {w ? (
         <div className="weather">
           <div className="weather-icon"><WeatherIcon code={w.code} size={34} /></div>
@@ -60,7 +61,7 @@ export function FxCard() {
   const rows = db.external.filter((r) => r.type === 'fx');
   return (
     <div className="card widget">
-      <div className="widget-head"><h3>Валютын ханш</h3><span className="muted small">₮ / 1 нэгж</span></div>
+      <div className="widget-head"><h3>Валютын ханш</h3><Link to="/tsag-agaar-hansh" className="link">Бүх ханш ›</Link></div>
       {rows.length ? (
         <div className="fx">
           {rows.map((r) => (

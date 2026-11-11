@@ -1,10 +1,11 @@
-// FR-AUTH-001: сэтгүүлчийн бүртгэл, эрхийн баталгаажуулалт
-import { useState } from 'react';
+// FR-AUTH-001: иргэн / сэтгүүлчийн бүртгэл, эрхийн баталгаажуулалт, и-мэйлийн код (OTP)
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
-import { Paperclip, UserPlus } from 'lucide-react';
+import { Paperclip, UserPlus, MailCheck, RotateCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { DOC_TYPES, ROLES, FILE_RULES } from '../lib/constants';
+import { resendSignupOtp } from '../api/auth';
 import { LogoMark } from '../components/Logo';
 import { Field, Alert, Spinner } from '../components/ui';
 
@@ -28,11 +29,70 @@ export function DocFields({ docType, setDocType, file, setFile, errors }) {
   );
 }
 
+/** И-мэйлээр ирсэн кодыг оруулах алхам (Supabase дээр «Confirm email» асаалттай үед) */
+function OtpStep({ email, onVerify, onBack }) {
+  const toast = useToast();
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [wait, setWait] = useState(60);
+  useEffect(() => {
+    if (wait <= 0) return undefined;
+    const t = setTimeout(() => setWait((w) => w - 1), 1000);
+    return () => clearTimeout(t);
+  }, [wait]);
+
+  const verify = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await onVerify(code);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const resend = async () => {
+    try {
+      await resendSignupOtp(email);
+      toast.success('Шинэ код илгээлээ.');
+      setWait(60);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  return (
+    <form className="form-grid" onSubmit={verify} noValidate>
+      <Alert tone="info" title={`${email} хаяг руу баталгаажуулах код илгээлээ`}>
+        Ирсэн захианаас кодоо оруулна уу. Захиа ирээгүй бол Spam хавтсаа шалгана уу.
+      </Alert>
+      {error && <Alert tone="error" title={error} />}
+      <Field label="Баталгаажуулах код" required>
+        <input className="input input-lg otp-input" inputMode="numeric" autoComplete="one-time-code" maxLength={10} autoFocus
+          value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="123456" />
+      </Field>
+      <button className="btn btn-primary btn-block" disabled={busy || code.length < 6}>
+        {busy ? <Spinner /> : <MailCheck size={16} />} Баталгаажуулах
+      </button>
+      <div className="row between">
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onBack}>Буцах</button>
+        <button type="button" className="btn btn-ghost btn-sm" disabled={wait > 0} onClick={resend}>
+          <RotateCw size={14} /> {wait > 0 ? `Дахин илгээх (${wait}с)` : 'Код дахин илгээх'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function Register() {
-  const { user, register } = useAuth();
+  const { user, register, confirmOtp } = useAuth();
   const toast = useToast();
   const nav = useNavigate();
-  const [role, setRole] = useState(ROLES.JOURNALIST);
+  const [role, setRole] = useState(ROLES.CITIZEN);
+  const [otpFor, setOtpFor] = useState(null); // кодоор баталгаажуулах и-мэйл
   const [f, setF] = useState({ fullName: '', email: '', phone: '', org: '', password: '', password2: '', terms: false });
   const [docType, setDocType] = useState('');
   const [file, setFile] = useState(null);
@@ -46,21 +106,28 @@ export default function Register() {
     setErrors((e) => ({ ...e, [k]: undefined }));
   };
 
+  const done = (u) => {
+    if (u.role === ROLES.JOURNALIST) {
+      toast.success('Бүртгэл үүслээ. Таны баримтыг админ хянаж баталгаажуулна.');
+      nav('/j/verification');
+    } else {
+      toast.success('Амжилттай бүртгүүллээ.');
+      nav('/');
+    }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
     setError('');
     setErrors({});
     try {
-      const u = await register({ ...f, role, docType, file });
-      if (u.role === ROLES.JOURNALIST) {
-        toast.success('Бүртгэл үүслээ. Таны баримтыг админ хянаж баталгаажуулна.');
-        nav('/j/verification');
-      } else {
-        toast.success('Амжилттай бүртгүүллээ.');
-        nav('/');
-      }
+      done(await register({ ...f, role, docType, file }));
     } catch (err) {
+      if (err.code === 'OTP_REQUIRED') {
+        setOtpFor(f.email.trim().toLowerCase());
+        return;
+      }
       setError(err.message);
       setErrors(err.fields || {});
     } finally {
@@ -73,12 +140,23 @@ export default function Register() {
       <div className="card auth-card wide">
         <div className="auth-head">
           <LogoMark size={52} className="lg" />
-          <h1>Бүртгүүлэх</h1>
-          <p className="muted">Сэтгүүлч бол баримтаа хавсарган эрхээ баталгаажуулна</p>
+          <h1>{otpFor ? 'И-мэйлээ баталгаажуулах' : 'Бүртгүүлэх'}</h1>
+          <p className="muted">
+            {otpFor ? 'Бүртгэлээ дуусгахын тулд кодоо оруулна уу'
+              : role === ROLES.JOURNALIST ? 'Сэтгүүлч баримтаа хавсарган эрхээ баталгаажуулна' : 'Pulse.mn-д иргэнээр бүртгүүлэх'}
+          </p>
         </div>
+        {otpFor ? (
+          <OtpStep
+            email={otpFor}
+            onVerify={async (code) => done(await confirmOtp(otpFor, code, { fullName: f.fullName.trim(), role, docType, file }))}
+            onBack={() => setOtpFor(null)}
+          />
+        ) : (
+        <>
         <div className="segmented">
-          <button type="button" className={role === ROLES.JOURNALIST ? 'active' : ''} onClick={() => setRole(ROLES.JOURNALIST)}>Сэтгүүлч</button>
           <button type="button" className={role === ROLES.CITIZEN ? 'active' : ''} onClick={() => setRole(ROLES.CITIZEN)}>Иргэн</button>
+          <button type="button" className={role === ROLES.JOURNALIST ? 'active' : ''} onClick={() => setRole(ROLES.JOURNALIST)}>Сэтгүүлч</button>
         </div>
         <form className="form-grid mt-16" onSubmit={submit} noValidate>
           {error && <Alert tone="error" title={error} />}
@@ -123,6 +201,8 @@ export default function Register() {
             {busy ? <Spinner /> : <UserPlus size={16} />} Бүртгүүлэх
           </button>
         </form>
+        </>
+        )}
         <p className="center muted small mt-16">
           Бүртгэлтэй юу? <Link to="/login" className="link">Нэвтрэх</Link>
         </p>

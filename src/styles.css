@@ -317,6 +317,7 @@ dl, dd { margin: 0; }
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .input-lg { height: 48px; font-size: 16px; font-weight: 600; }
+.otp-input { letter-spacing: 0.4em; text-align: center; font-size: 22px; font-variant-numeric: tabular-nums; }
 .select { appearance: none; padding-right: 34px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
 .select.auto { width: auto; min-width: 160px; }
 .select.sm, .input.sm { height: 34px; font-size: 13px; }
@@ -557,3 +558,60 @@ dl, dd { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   .cc-card, .cc-content, .cc-peek, .cc-tab { transition: none; }
 }
+
+/* ============================================================
+   2026-11-11: валютын гүйдэг мөр, цаг агаар/ханшийн хуудас,
+   онцлох мэдээ, мэдээ устгах
+   ============================================================ */
+.topbar-right { color: inherit; border-radius: 6px; padding: 2px 6px; margin-right: -6px; transition: background 0.15s; }
+.topbar-right:hover { background: rgba(255, 255, 255, 0.08); }
+.topbar-right:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.tb-fx { min-width: 108px; transition: opacity 0.4s ease, transform 0.4s ease; }
+.tb-fx strong { font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+.tb-fx.out { opacity: 0; transform: translateY(-4px); }
+.tb-fx.in { opacity: 1; transform: none; }
+.tb-more { color: #8f96a3; font-size: 12px; }
+.topbar-right:hover .tb-more { color: #fff; }
+@media (max-width: 640px) { .tb-more { display: none; } .topbar-inner { justify-content: flex-end; } }
+@media (prefers-reduced-motion: reduce) { .tb-fx { transition: none; } .tb-fx.out { transform: none; } }
+
+.page-title { font-size: 30px; margin: 0 0 18px; }
+.info-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 980px) { .info-grid { grid-template-columns: 1fr; } }
+.info-section .h-title { font-size: 20px; }
+.card-foot { margin: 0; padding: 12px 22px; border-top: 1px solid var(--line); }
+.info-sub { font-size: 15px; margin: 22px 0 10px; }
+
+.wx-now { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
+.wx-now-main { display: flex; align-items: center; gap: 16px; }
+.wx-now-icon { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 18px; background: var(--accent-soft); color: var(--accent); }
+.wx-now-temp { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.wx-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px 18px; margin: 0; flex: 1 1 260px; }
+.wx-facts dt { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; }
+.wx-facts dd { margin: 2px 0 0; font-weight: 700; }
+.wx-hours { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; }
+.wx-hour { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 64px; padding: 10px 6px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--ink-2); }
+.wx-rain { color: var(--blue); font-variant-numeric: tabular-nums; }
+.wx-days { display: flex; flex-direction: column; }
+.wx-day { display: grid; grid-template-columns: 76px 28px 40px 36px 1fr 36px; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.wx-day:last-child { border-bottom: 0; }
+.wx-day-name { font-weight: 600; }
+.wx-day-icon { color: var(--ink-2); display: flex; }
+.wx-lo { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.wx-hi { font-weight: 700; font-variant-numeric: tabular-nums; }
+.wx-bar { position: relative; height: 6px; border-radius: 99px; background: var(--gray-soft); }
+.wx-bar span { position: absolute; top: 0; bottom: 0; border-radius: 99px; background: linear-gradient(90deg, #60a5fa, #f59e0b); }
+
+.fx-convert { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.fx-result { grid-column: 1 / -1; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--accent-soft); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.fx-result strong { color: var(--ink); font-size: 18px; }
+.fx-table .num, .fx-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.fx-table td { padding: 10px 16px; }
+.fx-flag { font-size: 16px; }
+
+.icon-only { padding: 0 9px; }
+.featured-toggle { color: var(--muted); }
+.featured-toggle.on { color: #d97706; }
+.featured-toggle.on.btn-secondary { border-color: #fcd34d; background: #fffbeb; }
+.featured-check { padding: 10px 12px; border: 1px dashed var(--line-2); border-radius: var(--radius-sm); background: var(--surface-2); }
+.widget-head a { font-size: 12px; }
