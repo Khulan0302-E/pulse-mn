@@ -126,7 +126,7 @@ export async function register(data) {
         fileName: data.file.name, status: VERIFY.PENDING, reviewerId: null, decidedAt: null,
         reason: '', createdAt: now(),
       });
-      notifyRole(d, ROLES.EDITOR, `Шинэ сэтгүүлч ${fullName} баталгаажуулах хүсэлт илгээлээ.`);
+      notifyRole(d, ROLES.ADMIN, `Шинэ сэтгүүлч ${fullName} баталгаажуулах хүсэлт илгээлээ.`);
     }
     addLog(d, id, 'Бүртгүүлсэн', `${role === ROLES.JOURNALIST ? 'Сэтгүүлч' : 'Иргэн'} #${id}`);
     return user;
@@ -146,8 +146,34 @@ async function remoteRegister({ fullName, email, phone, org, role, password, doc
     throw new AppError(error.message);
   }
   if (!res.session) {
-    throw new AppError('Бүртгэл үүссэн боловч Supabase дээр и-мэйл баталгаажуулалт асаалттай байна. Authentication → Sign In / Providers → Email → «Confirm email»-ийг унтраана уу.');
+    // Supabase дээр «Confirm email» асаалттай: и-мэйлээр ирсэн кодоор (OTP) баталгаажуулж байж нэвтэрнэ.
+    // Бүртгэлийн үлдсэн алхмыг (баримт байршуулах) verifySignupOtp() гүйцээнэ.
+    throw new AppError('Таны и-мэйл рүү баталгаажуулах код илгээлээ.', null, 'OTP_REQUIRED');
   }
+  return finishRemoteRegister({ fullName, role, docType, file });
+}
+
+/** И-мэйлээр ирсэн кодыг шалгаж бүртгэлийг гүйцээнэ */
+export async function verifySignupOtp(email, token, pending) {
+  const code = String(token || '').replace(/\D/g, '');
+  if (code.length < 6) throw new AppError('И-мэйлээр ирсэн кодыг бүтэн оруулна уу.', { otp: 'Код буруу байна.' });
+  const { data, error } = await supabase.auth.verifyOtp({ email: String(email).trim().toLowerCase(), token: code, type: 'email' });
+  if (error || !data.session) {
+    const expired = /expired/i.test(error?.message || '');
+    throw new AppError(expired ? 'Кодын хугацаа дууссан. Шинэ код авна уу.' : 'Код буруу байна. Дахин оролдоно уу.', { otp: 'Код буруу эсвэл хугацаа дууссан.' });
+  }
+  return finishRemoteRegister(pending);
+}
+
+/** Баталгаажуулах кодыг дахин илгээнэ */
+export async function resendSignupOtp(email) {
+  const { error } = await supabase.auth.resend({ type: 'signup', email: String(email).trim().toLowerCase() });
+  if (error) {
+    throw new AppError(/rate|seconds/i.test(error.message) ? 'Түр хүлээгээд дахин оролдоно уу.' : error.message);
+  }
+}
+
+async function finishRemoteRegister({ fullName, role, docType, file }) {
   const me = await reloadRemote();
   if (!me) throw new AppError('Профайл үүссэнгүй. supabase/schema.sql ажилласан эсэхийг шалгана уу.');
 
@@ -163,7 +189,7 @@ async function remoteRegister({ fullName, email, phone, org, role, password, doc
         id: nextId(d, 'verifications'), userId: me.id, docType, fileUrl, fileName: file.name,
         status: VERIFY.PENDING, reviewerId: null, decidedAt: null, reason: '', createdAt: now(),
       });
-      notifyRole(d, ROLES.EDITOR, `Шинэ сэтгүүлч ${fullName} баталгаажуулах хүсэлт илгээлээ.`);
+      notifyRole(d, ROLES.ADMIN, `Шинэ сэтгүүлч ${fullName} баталгаажуулах хүсэлт илгээлээ.`);
       addLog(d, me.id, 'Бүртгүүлсэн', `Сэтгүүлч #${me.id}`);
     });
   } else {
@@ -193,7 +219,7 @@ export async function resubmitVerification(user, docType, file) {
       id: nextId(d, 'verifications'), userId: user.id, docType, fileUrl, fileName: file.name,
       status: VERIFY.PENDING, reviewerId: null, decidedAt: null, reason: '', createdAt: now(),
     });
-    notifyRole(d, ROLES.EDITOR, `${user.fullName} баталгаажуулах баримтаа дахин илгээлээ.`);
+    notifyRole(d, ROLES.ADMIN, `${user.fullName} баталгаажуулах баримтаа дахин илгээлээ.`);
     addLog(d, user.id, 'Баримт дахин илгээсэн', `Хэрэглэгч #${user.id}`);
   });
 }
