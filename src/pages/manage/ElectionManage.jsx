@@ -171,8 +171,8 @@ export default function ElectionManage() {
         </button>
       </div>
       <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'candidates'} className={tab === 'candidates' ? 'active' : ''} onClick={() => setTab('candidates')}><Users size={15} /> Нэр дэвшигчид <span className="tab-count">{candidates.length}</span></button>
-        <button role="tab" aria-selected={tab === 'parties'} className={tab === 'parties' ? 'active' : ''} onClick={() => setTab('parties')}><Landmark size={15} /> Намууд <span className="tab-count">{parties.length}</span></button>
+        <button role="tab" aria-selected={tab === 'candidates'} className={`tab ${tab === 'candidates' ? 'active' : ''}`} onClick={() => setTab('candidates')}><Users size={15} /> Нэр дэвшигчид <span className="tab-count">{candidates.length}</span></button>
+        <button role="tab" aria-selected={tab === 'parties'} className={`tab ${tab === 'parties' ? 'active' : ''}`} onClick={() => setTab('parties')}><Landmark size={15} /> Намууд <span className="tab-count">{parties.length}</span></button>
       </div>
       <div className="card">
         {tab === 'candidates' ? (

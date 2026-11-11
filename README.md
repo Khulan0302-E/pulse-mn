@@ -82,7 +82,8 @@ src/
 7. (Заавал биш) **Database → Extensions → pg_cron** асаагаад `supabase/cron.sql`-ийг Run —
    товлосон нийтлэл минут тутам автоматаар нийтлэгдэнэ. Үгүй бол редактор сайтад орсон үед нийтлэгдэнэ.
 Өмнө нь `schema.sql`-ийг ажиллуулсан төсөлд шинэчлэл бүрийн `supabase/update-*.sql` файлыг SQL Editor дээр Run хийнэ
-(`update-2026-11-11.sql`: Админ баталгаажуулах, «Онцлох мэдээ», мэдээ устгах эрх).
+(`update-2026-11-11.sql`: Админ баталгаажуулах, «Онцлох мэдээ», мэдээ устгах эрх;
+`update-2026-11-12.sql`: Сонгууль (нэр дэвшигч, нам), үзэлтийн статистик, зургийн байршил).
 
 8. **Vercel → Project → Settings → Environment Variables**-д `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`-г нэмээд
    **Deployments → Redeploy**.

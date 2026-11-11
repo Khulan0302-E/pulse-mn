@@ -1,3 +1,4 @@
+import { plainText } from './richtext';
 const pad = (n) => String(n).padStart(2, '0');
 const WEEKDAYS = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
 
@@ -34,6 +35,6 @@ export function initials(name = '') {
 }
 
 export function excerpt(text = '', n = 160) {
-  const t = text.replace(/\s+/g, ' ').trim();
+  const t = plainText(text || '').replace(/\s+/g, ' ').trim();
   return t.length > n ? `${t.slice(0, n).trimEnd()}…` : t;
 }

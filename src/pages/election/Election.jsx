@@ -148,10 +148,10 @@ export default function Election() {
       </div>
       <FeaturedCandidates list={featured} db={db} />
       <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'ner-devshigchid'} className={tab === 'ner-devshigchid' ? 'active' : ''} onClick={() => setParams({})}>
+        <button role="tab" aria-selected={tab === 'ner-devshigchid'} className={`tab ${tab === 'ner-devshigchid' ? 'active' : ''}`} onClick={() => setParams({})}>
           <Users size={15} /> Нэр дэвшигчид <span className="tab-count">{(db.candidates || []).length}</span>
         </button>
-        <button role="tab" aria-selected={tab === 'namuud'} className={tab === 'namuud' ? 'active' : ''} onClick={() => setParams({ tab: 'namuud' })}>
+        <button role="tab" aria-selected={tab === 'namuud'} className={`tab ${tab === 'namuud' ? 'active' : ''}`} onClick={() => setParams({ tab: 'namuud' })}>
           <Landmark size={15} /> Намууд <span className="tab-count">{(db.parties || []).length}</span>
         </button>
       </div>

@@ -3,13 +3,13 @@ import { useDb } from '../lib/useDb';
 import { fmtDate, initials } from '../lib/format';
 import { locationLabel, userById } from '../api/news';
 import { CatLabel } from './NewsCard';
-import { MediaView } from './ui';
+import MediaGallery from './MediaGallery';
+import { renderHtml } from '../lib/richtext';
 
 /** Нийтлэлийн харагдац — нийтийн хуудас, урьдчилсан харагдац, редакторын хяналтад ашиглана */
 export default function NewsPreview({ news, media = [], showAuthor = true }) {
   const db = useDb();
   const author = userById(db, news.journalistId);
-  const paragraphs = (news.content || '').split(/\n\s*\n|\n/).filter((p) => p.trim());
   const updated = news.publishedAt && news.updatedAt && new Date(news.updatedAt) - new Date(news.publishedAt) > 60000;
   return (
     <article className="article">
@@ -34,19 +34,10 @@ export default function NewsPreview({ news, media = [], showAuthor = true }) {
         </div>
       )}
 
-      {media.length > 0 && (
-        <div className={`gallery ${media.length > 1 ? 'gallery-multi' : ''}`}>
-          {media.map((m) => (
-            <MediaView key={m.id || m.key} media={m} />
-          ))}
-        </div>
-      )}
+      {media.length > 0 && <MediaGallery media={media} layout={news.mediaLayout || 'auto'} />}
 
-      <div className="article-body">
-        {paragraphs.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-      </div>
+      {/* renderHtml нь зөвхөн зөвшөөрсөн таг/классыг үлдээдэг тул аюулгүй */}
+      <div className="article-body" dangerouslySetInnerHTML={{ __html: renderHtml(news.content) }} />
 
       <div className="source-box">
         <strong>Эх сурвалж</strong>
