@@ -1,5 +1,5 @@
 import { Navigate, NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { FileText, PenLine, BadgeCheck, Inbox, CalendarClock, Newspaper, Users, Plug, ScrollText, Bell, Lock } from 'lucide-react';
+import { FileText, PenLine, BadgeCheck, Inbox, CalendarClock, Newspaper, Users, Plug, ScrollText, Bell, Lock, BarChart3, Vote } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useDb } from '../lib/useDb';
 import { ROLE_LABELS, STATUS, VERIFY } from '../lib/constants';
@@ -25,17 +25,21 @@ const NAV = {
   journalist: [
     { to: '/j', label: 'Миний ноорог', icon: FileText, end: true },
     { to: '/j/new', label: 'Шинэ ноорог', icon: PenLine },
+    { to: '/j/stats', label: 'Статистик', icon: BarChart3 },
     { to: '/j/verification', label: 'Баталгаажуулалт', icon: BadgeCheck, badge: 'verify' },
   ],
   editor: [
     { to: '/e', label: 'Хянах жагсаалт', icon: Inbox, end: true, badge: 'review' },
     { to: '/e/scheduled', label: 'Товлосон', icon: CalendarClock, badge: 'scheduled' },
     { to: '/e/published', label: 'Нийтлэгдсэн', icon: Newspaper },
+    { to: '/e/election', label: 'Сонгууль', icon: Vote },
   ],
   admin: [
     { to: '/a', label: 'Хэрэглэгчид', icon: Users, end: true },
     { to: '/a/verifications', label: 'Сэтгүүлч баталгаажуулах', icon: BadgeCheck, badge: 'pendingVerify' },
     { to: '/a/news', label: 'Мэдээ', icon: Newspaper },
+    { to: '/a/stats', label: 'Статистик', icon: BarChart3 },
+    { to: '/a/election', label: 'Сонгууль', icon: Vote },
     { to: '/a/integrations', label: 'API интеграц', icon: Plug },
     { to: '/a/system', label: 'Лог ба нөөц', icon: ScrollText },
   ],

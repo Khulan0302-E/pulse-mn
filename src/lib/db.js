@@ -83,11 +83,16 @@ export async function initDb() {
     state = await buildSeed();
     persist(state);
   }
+  // Хуучин демо өгөгдөлд шинэ хүснэгтүүд байхгүй байж болно
+  state.parties ||= [];
+  state.candidates ||= [];
   // Өөр таб дээр хийсэн өөрчлөлтийг тусгах
   window.addEventListener('storage', (e) => {
     if (e.key === KEY) {
       const next = loadLocal();
       if (next) {
+        next.parties ||= [];
+        next.candidates ||= [];
         state = next;
         emit();
       }

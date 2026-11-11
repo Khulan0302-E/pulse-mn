@@ -23,6 +23,8 @@ const TABLES = [
   { key: 'versions', table: 'news_versions' },
   { key: 'notifications', table: 'notifications', del: false },
   { key: 'external', table: 'external_data' },
+  { key: 'parties', table: 'parties' },
+  { key: 'candidates', table: 'candidates' },
   { key: 'logs', table: 'activity_logs', del: false, cols: [] },
 ];
 
@@ -83,6 +85,13 @@ export async function loadRemote() {
 
   if (!settings[0]) throw new Error(translateError({ code: 'PGRST205' }));
 
+  // Сонгуулийн хүснэгтүүд (update-2026-11-12.sql ажиллаагүй бол хоосон, сайт эвдрэхгүй)
+  const optional = (q) => q.then(({ data, error }) => (error ? [] : (data || []).map(fromRow)), () => []);
+  const [parties, candidates] = await Promise.all([
+    optional(supabase.from('parties').select('*').order('name')),
+    optional(supabase.from('candidates').select('*').order('full_name')),
+  ]);
+
   // Нийтэд харагдах зохиогчийн мэдээлэл + (эрх байвал) бүрэн профайл
   const users = new Map();
   authors.forEach((a) => users.set(a.id, { email: '', phone: '', ...a }));
@@ -92,7 +101,7 @@ export async function loadRemote() {
     schema: 1,
     users: [...users.values()].sort((a, b) => a.id - b.id),
     verifications, categories, locations, news, media, decisions, versions,
-    notifications, external, logs,
+    notifications, external, logs, parties, candidates,
     settings: settings[0].data,
     seq: {},
   };

@@ -65,6 +65,14 @@ export function incrementView(id) {
   const bump = (d) => {
     const n = d.news.find((x) => x.id === id);
     if (n) n.views = (n.views || 0) + 1;
+    if (!isRemote && n) {
+      // Демо горимд өдөр тутмын статистикийг браузерт хадгална (Supabase-д increment_view бичнэ)
+      const day = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+      d.viewsDaily ||= [];
+      const row = d.viewsDaily.find((r) => r.newsId === id && r.day === day);
+      if (row) row.views += 1;
+      else d.viewsDaily.push({ newsId: id, day, views: 1 });
+    }
   };
   if (isRemote) {
     // Иргэн мэдээг засах эрхгүй тул сервер талын функцээр тоолно
