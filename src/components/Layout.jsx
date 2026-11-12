@@ -138,6 +138,7 @@ function Header() {
           {CATEGORIES.map((c) => (
             <NavLink key={c.id} to={`/category/${c.slug}`}>{c.name}</NavLink>
           ))}
+          <NavLink to="/songuuli" className="nav-election">Сонгууль</NavLink>
         </nav>
         <div className="header-actions">
           {user ? (
@@ -175,6 +176,7 @@ function Footer() {
         </div>
         <div className="footer-links">
           {CATEGORIES.map((c) => <Link key={c.id} to={`/category/${c.slug}`}>{c.name}</Link>)}
+          <Link to="/songuuli">Сонгууль</Link>
         </div>
         <p className="muted small footer-note">© {new Date().getFullYear()} Pulse.mn · Хувийн мэдээллийг Хүний хувийн мэдээлэл хамгаалах тухай хуулийн дагуу боловсруулна.</p>
       </div>

@@ -29,6 +29,11 @@ import Users from './pages/admin/Users';
 import AdminNews from './pages/admin/News';
 import Integrations from './pages/admin/Integrations';
 import System from './pages/admin/System';
+import Election from './pages/election/Election';
+import CandidatePage from './pages/election/CandidatePage';
+import PartyPage from './pages/election/PartyPage';
+import ElectionManage from './pages/manage/ElectionManage';
+import Stats from './pages/Stats';
 
 // Маршрут солигдоход маягтын төлөв цэвэрлэгдэхийн тулд key өгнө
 function Keyed({ Component }) {
@@ -82,6 +87,9 @@ export default function App() {
         <Route path="category/:slug" element={<Home />} />
         <Route path="news/:id" element={<Article />} />
         <Route path="tsag-agaar-hansh" element={<WeatherFx />} />
+        <Route path="songuuli" element={<Election />} />
+        <Route path="songuuli/ner-devshigch/:id" element={<CandidatePage />} />
+        <Route path="songuuli/nam/:id" element={<PartyPage />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
@@ -92,6 +100,7 @@ export default function App() {
           <Route path="edit/:id" element={<Keyed Component={DraftEditor} />} />
           <Route path="news/:id" element={<DraftDetail />} />
           <Route path="verification" element={<Verification />} />
+          <Route path="stats" element={<Stats />} />
           <Route path="notifications" element={<Notifications embedded />} />
         </Route>
 
@@ -101,6 +110,7 @@ export default function App() {
           <Route path="scheduled" element={<ScheduledList />} />
           <Route path="published" element={<Published />} />
           <Route path="published/:id/edit" element={<Keyed Component={EditPublished} />} />
+          <Route path="election" element={<ElectionManage />} />
           <Route path="notifications" element={<Notifications embedded />} />
         </Route>
 
@@ -109,6 +119,8 @@ export default function App() {
           <Route path="users" element={<Users />} />
           <Route path="verifications" element={<Verifications />} />
           <Route path="news" element={<AdminNews />} />
+          <Route path="stats" element={<Stats />} />
+          <Route path="election" element={<ElectionManage />} />
           <Route path="integrations" element={<Integrations />} />
           <Route path="system" element={<System />} />
           <Route path="notifications" element={<Notifications embedded />} />

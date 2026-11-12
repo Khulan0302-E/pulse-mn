@@ -16,12 +16,17 @@ import NewsPreview from '../../components/NewsPreview';
 import { Alert, Modal, Confirm, Spinner } from '../../components/ui';
 import { VerificationNotice } from './Dashboard';
 
-const EMPTY = { title: '', content: '', categoryId: '', locationId: '', source: '', sourceConfidential: false, copyrightConsent: false };
+const EMPTY = { title: '', content: '', categoryId: '', locationId: '', source: '', sourceConfidential: false, copyrightConsent: false, mediaLayout: '', mediaOrder: [] };
+/** Урьдчилсан харагдацад сэтгүүлчийн сонгосон дарааллыг хэрэгжүүлнэ */
+const orderMedia = (list, order = []) =>
+  [...list].sort((a, b) => (order.includes(a.key) ? order.indexOf(a.key) : 1e9) - (order.includes(b.key) ? order.indexOf(b.key) : 1e9));
+
 const fromNews = (n) =>
   n
     ? {
         title: n.title, content: n.content, categoryId: String(n.categoryId), locationId: String(n.locationId),
         source: n.source || '', sourceConfidential: !!n.sourceConfidential, copyrightConsent: !!n.copyrightConsent,
+        mediaLayout: n.mediaLayout || '', mediaOrder: [],
       }
     : EMPTY;
 
@@ -182,7 +187,7 @@ export default function DraftEditor() {
         <Modal title="Урьдчилсан харагдац" wide onClose={() => setPreview(false)}>
           <NewsPreview
             news={{ ...form, journalistId: user.id }}
-            media={[...existingMedia.filter((m) => !removed.includes(m.id)), ...newFiles]}
+            media={orderMedia([...existingMedia.filter((m) => !removed.includes(m.id)).map((m) => ({ ...m, key: `m${m.id}` })), ...newFiles], form.mediaOrder)}
           />
         </Modal>
       )}

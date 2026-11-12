@@ -1,11 +1,14 @@
 // FR-CNT-001 ноорог оруулах маягт (сэтгүүлч, редакторын засварт хоёуланд нь ашиглана)
 import { useEffect, useRef, useState } from 'react';
-import { Upload, X, Video } from 'lucide-react';
+import { Upload, X, Video, LayoutGrid } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { getDb } from '../lib/db';
 import { CATEGORIES, LOCATIONS, MEDIA_HINT, MAX_MEDIA_PER_NEWS, LIMITS } from '../lib/constants';
 import { validateFile, uid } from '../lib/files';
 import { Field, MediaView } from './ui';
+import MediaLayoutPicker from './MediaLayoutPicker';
+import RichTextEditor from './RichTextEditor';
+import { layoutLabel } from './MediaGallery';
 
 function LocationFields({ value, onChange, error }) {
   const db = getDb();
@@ -52,7 +55,16 @@ export default function NewsForm({
   const toast = useToast();
   const inputRef = useRef(null);
   const [drag, setDrag] = useState(false);
+  const [picker, setPicker] = useState(false);
   const keptMedia = existingMedia.filter((m) => !removed.includes(m.id));
+  // Зураг/бичлэгийг сэтгүүлчийн сонгосон дарааллаар (form.mediaOrder) жагсаана
+  const items = [
+    ...keptMedia.map((m) => ({ ...m, key: `m${m.id}`, existing: true })),
+    ...newFiles.map((f) => ({ ...f, existing: false })),
+  ];
+  const order = form.mediaOrder || [];
+  const rank = (k) => (order.includes(k) ? order.indexOf(k) : order.length + items.findIndex((x) => x.key === k));
+  const ordered = [...items].sort((a, b) => rank(a.key) - rank(b.key));
 
   const addFiles = async (list) => {
     let count = keptMedia.length + newFiles.length;
@@ -89,8 +101,8 @@ export default function NewsForm({
         <LocationFields value={form.locationId} onChange={(v) => set('locationId', v)} error={errors.locationId} />
       </div>
 
-      <Field label="Агуулга" required error={errors.content} hint="Догол мөрийг хоосон мөрөөр тусгаарлана.">
-        <textarea className="textarea" rows={12} value={form.content} onChange={(e) => set('content', e.target.value)} placeholder="Мэдээний агуулга…" />
+      <Field label="Агуулга" required error={errors.content} hint="Текстээ сонгоод фонт, хэмжээ, тод (Ctrl+B), налуу (Ctrl+I)-г сонгоно. Enter дарж шинэ догол мөр эхэлнэ.">
+        <RichTextEditor value={form.content} onChange={(v) => set('content', v)} placeholder="Мэдээний агуулга…" invalid={Boolean(errors.content)} />
       </Field>
 
       <Field label="Зураг, дүрс бичлэг" hint={MEDIA_HINT}>
@@ -108,11 +120,24 @@ export default function NewsForm({
           <input ref={inputRef} type="file" hidden multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.webm"
             onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
         </div>
-        {(keptMedia.length > 0 || newFiles.length > 0) && (
+        {ordered.length > 0 && (
           <div className="file-list">
-            {keptMedia.map((m) => <Tile key={m.id} media={m} onRemove={() => setRemoved((r) => [...r, m.id])} />)}
-            {newFiles.map((f) => <Tile key={f.key} media={f} onRemove={() => setNewFiles((p) => p.filter((x) => x.key !== f.key))} />)}
+            {ordered.map((m) => (
+              <Tile key={m.key} media={m} onRemove={() => (m.existing
+                ? setRemoved((r) => [...r, m.id])
+                : setNewFiles((p) => p.filter((x) => x.key !== m.key)))} />
+            ))}
           </div>
+        )}
+        {ordered.length > 1 && (
+          <button type="button" className="btn btn-secondary btn-sm mt-8 layout-btn" onClick={() => setPicker(true)}>
+            <LayoutGrid size={15} /> Байршил: <strong>{layoutLabel(form.mediaLayout)}</strong> · Өөрчлөх
+          </button>
+        )}
+        {picker && (
+          <MediaLayoutPicker items={ordered} layout={form.mediaLayout}
+            onSave={({ layout, order: o }) => { set('mediaLayout', layout); set('mediaOrder', o); }}
+            onClose={() => setPicker(false)} />
         )}
       </Field>
 

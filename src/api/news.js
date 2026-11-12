@@ -6,6 +6,7 @@ import { uploadFile, getFileBlob, isLocalFile } from '../lib/files';
 import { supabase } from '../lib/supabase';
 import { STATUS, ROLES, ROLE_LABELS, DECISION, DECISION_LABELS, LIMITS, MAX_MEDIA_PER_NEWS } from '../lib/constants';
 import { AppError, assertRole, isVerifiedJournalist } from './auth';
+import { plainText, sanitizeRich, isRich } from '../lib/richtext';
 
 // ---------- Унших ----------
 export function listPublished(categoryId) {
@@ -18,7 +19,10 @@ export function getPublished(id) {
   return getDb().news.find((n) => n.id === id && n.status === STATUS.PUBLISHED) || null;
 }
 
-export const mediaFor = (db, newsId) => db.media.filter((m) => m.newsId === newsId);
+export const mediaFor = (db, newsId) =>
+  db.media
+    .filter((m) => m.newsId === newsId)
+    .sort((a, b) => (a.position ?? 1e9) - (b.position ?? 1e9) || a.id - b.id);
 export const decisionsFor = (db, newsId) =>
   db.decisions.filter((d) => d.newsId === newsId).sort((a, b) => b.id - a.id);
 export const versionsFor = (db, newsId) =>
@@ -65,6 +69,14 @@ export function incrementView(id) {
   const bump = (d) => {
     const n = d.news.find((x) => x.id === id);
     if (n) n.views = (n.views || 0) + 1;
+    if (!isRemote && n) {
+      // Демо горимд өдөр тутмын статистикийг браузерт хадгална (Supabase-д increment_view бичнэ)
+      const day = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+      d.viewsDaily ||= [];
+      const row = d.viewsDaily.find((r) => r.newsId === id && r.day === day);
+      if (row) row.views += 1;
+      else d.viewsDaily.push({ newsId: id, day, views: 1 });
+    }
   };
   if (isRemote) {
     // Иргэн мэдээг засах эрхгүй тул сервер талын функцээр тоолно
@@ -81,7 +93,7 @@ export function validateNewsData(db, data, { forSubmit }) {
   const title = (data.title || '').trim();
   if (!title) errors.title = 'Гарчгаа оруулна уу.';
   else if (title.length > LIMITS.title) errors.title = `Гарчиг ${LIMITS.title} тэмдэгтээс хэтрэхгүй.`;
-  if (!(data.content || '').trim()) errors.content = 'Агуулгаа оруулна уу.';
+  if (!plainText(data.content).trim()) errors.content = 'Агуулгаа оруулна уу.';
   if (!db.categories.some((c) => c.id === Number(data.categoryId))) errors.categoryId = 'Мэдээний төрлийг зөв сонгоно уу.';
   if (!locationById(db, data.locationId)) errors.locationId = 'Аймаг, сумаа заавал сонгоно уу.';
   if ((data.source || '').length > LIMITS.source) errors.source = `Эх сурвалж ${LIMITS.source} тэмдэгтээс хэтрэхгүй.`;
@@ -114,7 +126,7 @@ export async function prepareFiles(items = []) {
     }
     try {
       const fileUrl = await uploadFile(it.file, 'media');
-      out.push({ type: it.type, name: it.file.name, sizeMB: it.sizeMB, fileUrl });
+      out.push({ key: it.key, type: it.type, name: it.file.name, sizeMB: it.sizeMB, fileUrl });
     } catch {
       throw new AppError('Файл хадгалж чадсангүй. Дахин оролдоно уу.');
     }
@@ -130,25 +142,44 @@ function snapshot(db, n) {
     locationId: n.locationId,
     source: n.source,
     sourceConfidential: n.sourceConfidential,
+    mediaLayout: n.mediaLayout || null,
     media: mediaFor(db, n.id).map((m) => ({ name: m.name, type: m.type })),
   };
 }
 
 function applyFields(n, data) {
   n.title = data.title.trim();
-  n.content = data.content.trim();
+  // Форматтай агуулгыг хадгалахын өмнө дахин цэвэрлэнэ (зөвшөөрөгдөөгүй HTML-ийг хаяна)
+  n.content = isRich(data.content) ? sanitizeRich(data.content) : data.content.trim();
   n.categoryId = Number(data.categoryId);
   n.locationId = Number(data.locationId);
   n.source = (data.source || '').trim();
   n.sourceConfidential = Boolean(data.sourceConfidential);
   if ('copyrightConsent' in data) n.copyrightConsent = Boolean(data.copyrightConsent);
+  // Байршил: сонгосон эсвэл өмнө нь утгатай байсан үед л бичнэ
+  if (data.mediaLayout || n.mediaLayout) n.mediaLayout = data.mediaLayout || null;
 }
 
-function applyMedia(db, newsId, uploaded, removeIds = []) {
+function applyMedia(db, newsId, uploaded, removeIds = [], order = []) {
   db.media = db.media.filter((m) => !(m.newsId === newsId && removeIds.includes(m.id)));
-  uploaded.forEach((f) =>
-    db.media.push({ id: nextId(db, 'media'), newsId, type: f.type, name: f.name, fileUrl: f.fileUrl, sizeMB: f.sizeMB }),
-  );
+  const keyToId = {};
+  uploaded.forEach((f) => {
+    const id = nextId(db, 'media');
+    if (f.key) keyToId[f.key] = id;
+    db.media.push({ id, newsId, type: f.type, name: f.name, fileUrl: f.fileUrl, sizeMB: f.sizeMB });
+  });
+  // Сэтгүүлчийн сонгосон дараалал (хуучин файл: «m<id>», шинэ файл: түр түлхүүр)
+  const ids = (order || [])
+    .map((k) => (String(k).startsWith('m') && /^m\d+$/.test(k) ? Number(k.slice(1)) : keyToId[k]))
+    .filter(Boolean);
+  const mine = db.media.filter((m) => m.newsId === newsId);
+  if (ids.length && mine.length > 1) {
+    const rest = mine.filter((m) => !ids.includes(m.id)).map((m) => m.id);
+    [...ids, ...rest].forEach((id, i) => {
+      const m = mine.find((x) => x.id === id);
+      if (m && m.position !== i) m.position = i;
+    });
+  }
   if (mediaFor(db, newsId).length > MAX_MEDIA_PER_NEWS) {
     throw new AppError(`Нэг мэдээнд ${MAX_MEDIA_PER_NEWS}-аас ихгүй файл хавсаргана.`);
   }
@@ -180,7 +211,7 @@ export async function createNews(user, data, { submit = false } = {}) {
     };
     applyFields(n, data);
     d.news.push(n);
-    applyMedia(d, id, uploaded);
+    applyMedia(d, id, uploaded, [], data.mediaOrder);
     pushVersion(d, n, user.id);
     if (submit) notifyRole(d, ROLES.EDITOR, `Шинэ ноорог хянуулахаар ирлээ: «${n.title}».`, id);
     addLog(d, user.id, submit ? 'Ноорог илгээсэн' : 'Ноорог үүсгэсэн', `Мэдээ #${id}`);
@@ -199,7 +230,7 @@ export async function updateDraft(user, id, data, { submit = false } = {}) {
   return mutate((d) => {
     const n = d.news.find((x) => x.id === id);
     applyFields(n, data);
-    applyMedia(d, id, uploaded, data.removeMediaIds);
+    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder);
     n.updatedAt = now();
     if (submit) {
       n.status = STATUS.REVIEW;
@@ -217,14 +248,22 @@ export async function updateDraft(user, id, data, { submit = false } = {}) {
 function sameContent(n, data) {
   return (
     n.title === (data.title || '').trim() &&
-    n.content === (data.content || '').trim() &&
+    n.content === (isRich(data.content) ? sanitizeRich(data.content) : (data.content || '').trim()) &&
     n.categoryId === Number(data.categoryId) &&
     n.locationId === Number(data.locationId) &&
     (n.source || '') === (data.source || '').trim() &&
     Boolean(n.sourceConfidential) === Boolean(data.sourceConfidential) &&
     !(data.newFiles || []).length &&
-    !(data.removeMediaIds || []).length
+    !(data.removeMediaIds || []).length &&
+    (n.mediaLayout || '') === (data.mediaLayout || n.mediaLayout || '') &&
+    !orderChanged(n, data)
   );
+}
+
+function orderChanged(n, data) {
+  const cur = mediaFor(getDb(), n.id).map((m) => `m${m.id}`);
+  const next = (data.mediaOrder || []).filter((k) => cur.includes(k));
+  return next.length > 1 && JSON.stringify(next) !== JSON.stringify(cur.filter((k) => next.includes(k)));
 }
 
 /** FR-CNT-004: буцаагдсан ноорогийг засаж дахин илгээх */
@@ -243,7 +282,7 @@ export async function resubmitNews(user, id, data, { force = false } = {}) {
   return mutate((d) => {
     const n = d.news.find((x) => x.id === id);
     applyFields(n, data);
-    applyMedia(d, id, uploaded, data.removeMediaIds);
+    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder);
     n.version += 1;
     n.status = STATUS.REVIEW;
     n.submittedAt = now();
@@ -380,7 +419,7 @@ export async function updatePublished(user, id, data) {
     const n = d.news.find((x) => x.id === id);
     const { copyrightConsent, ...rest } = data; // eslint-disable-line no-unused-vars
     applyFields(n, rest);
-    applyMedia(d, id, uploaded, data.removeMediaIds);
+    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder);
     n.version += 1;
     n.updatedAt = now();
     pushVersion(d, n, user.id);

@@ -21,7 +21,7 @@ export default function EditPublished() {
   const news = db.news.find((n) => n.id === id && n.status === STATUS.PUBLISHED);
   const [form, setForm] = useState(() =>
     news
-      ? { title: news.title, content: news.content, categoryId: String(news.categoryId), locationId: String(news.locationId), source: news.source || '', sourceConfidential: !!news.sourceConfidential }
+      ? { title: news.title, content: news.content, categoryId: String(news.categoryId), locationId: String(news.locationId), source: news.source || '', sourceConfidential: !!news.sourceConfidential, mediaLayout: news.mediaLayout || '', mediaOrder: [] }
       : null,
   );
   const [newFiles, setNewFiles] = useState([]);
