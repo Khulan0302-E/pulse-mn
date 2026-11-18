@@ -9,6 +9,7 @@ import { Field, MediaView } from './ui';
 import MediaLayoutPicker from './MediaLayoutPicker';
 import RichTextEditor from './RichTextEditor';
 import { layoutLabel } from './MediaGallery';
+import { paragraphCount, placementLabel } from '../lib/placement';
 
 function LocationFields({ value, onChange, error }) {
   const db = getDb();
@@ -36,12 +37,13 @@ function LocationFields({ value, onChange, error }) {
   );
 }
 
-function Tile({ media, onRemove }) {
+function Tile({ media, onRemove, placement }) {
   return (
     <div className="file-tile">
       <div className="thumb">
         <MediaView media={media} />
         {media.type === 'video' && <span className="thumb-tag"><Video size={12} /> Бичлэг</span>}
+        {placement && placement !== 'top' && <span className="thumb-tag right">{placementLabel(placement)}</span>}
       </div>
       <div className="name" title={media.name || media.file?.name}>{media.name || media.file?.name}</div>
       <button type="button" className="rm" onClick={onRemove} aria-label="Хасах"><X size={14} /></button>
@@ -65,6 +67,8 @@ export default function NewsForm({
   const order = form.mediaOrder || [];
   const rank = (k) => (order.includes(k) ? order.indexOf(k) : order.length + items.findIndex((x) => x.key === k));
   const ordered = [...items].sort((a, b) => rank(a.key) - rank(b.key));
+  // Зураг бүрийн текст доторх байрлал (form.mediaPlacement нь хадгалаагүй өөрчлөлт)
+  const placeOf = (m) => (form.mediaPlacement || {})[m.key] ?? m.placement ?? 'top';
 
   const addFiles = async (list) => {
     let count = keptMedia.length + newFiles.length;
@@ -123,20 +127,26 @@ export default function NewsForm({
         {ordered.length > 0 && (
           <div className="file-list">
             {ordered.map((m) => (
-              <Tile key={m.key} media={m} onRemove={() => (m.existing
+              <Tile key={m.key} media={m} placement={placeOf(m)} onRemove={() => (m.existing
                 ? setRemoved((r) => [...r, m.id])
                 : setNewFiles((p) => p.filter((x) => x.key !== m.key)))} />
             ))}
           </div>
         )}
-        {ordered.length > 1 && (
+        {ordered.length > 0 && (
           <button type="button" className="btn btn-secondary btn-sm mt-8 layout-btn" onClick={() => setPicker(true)}>
-            <LayoutGrid size={15} /> Байршил: <strong>{layoutLabel(form.mediaLayout)}</strong> · Өөрчлөх
+            <LayoutGrid size={15} /> Байршил: <strong>{ordered.length > 1 ? layoutLabel(form.mediaLayout) : 'Нэг зураг'}</strong> · Текст дэх байрлал · Өөрчлөх
           </button>
         )}
         {picker && (
           <MediaLayoutPicker items={ordered} layout={form.mediaLayout}
-            onSave={({ layout, order: o }) => { set('mediaLayout', layout); set('mediaOrder', o); }}
+            paragraphs={paragraphCount(form.content)}
+            placements={Object.fromEntries(ordered.map((m) => [m.key, placeOf(m)]))}
+            onSave={({ layout, order: o, placement }) => {
+              set('mediaLayout', layout);
+              set('mediaOrder', o);
+              set('mediaPlacement', placement);
+            }}
             onClose={() => setPicker(false)} />
         )}
       </Field>

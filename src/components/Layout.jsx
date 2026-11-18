@@ -138,6 +138,7 @@ function Header() {
           {CATEGORIES.map((c) => (
             <NavLink key={c.id} to={`/category/${c.slug}`}>{c.name}</NavLink>
           ))}
+          <NavLink to="/aimag">Аймгууд</NavLink>
           <NavLink to="/songuuli" className="nav-election">Сонгууль</NavLink>
         </nav>
         <div className="header-actions">

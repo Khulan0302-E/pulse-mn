@@ -1,5 +1,5 @@
 // FR-PUB-004: нүүр хуудсанд мэдээг төрлөөр ангилан харуулах
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Newspaper } from 'lucide-react';
 import { useDb } from '../lib/useDb';
 import { CATEGORIES } from '../lib/constants';
@@ -7,6 +7,9 @@ import { listPublished } from '../api/news';
 import NewsCard, { LeadStory, CatLabel } from '../components/NewsCard';
 import { WeatherCard, FxCard } from '../components/InfoWidgets';
 import FeaturedCarousel from '../components/FeaturedCarousel';
+import LatestShowcase from '../components/LatestShowcase';
+import MongoliaMap from '../components/MongoliaMap';
+import { useAimagCounts } from './AimagNews';
 import { Empty } from '../components/ui';
 import { timeAgo } from '../lib/format';
 import NotFound from './NotFound';
@@ -34,6 +37,8 @@ function Popular({ list }) {
 export default function Home() {
   useDb();
   const { slug } = useParams();
+  const nav = useNavigate();
+  const aimagCounts = useAimagCounts();
   const cat = slug ? CATEGORIES.find((c) => c.slug === slug) : null;
   if (slug && !cat) return <NotFound />;
 
@@ -77,12 +82,29 @@ export default function Home() {
               {latest.length > 0 && (
                 <>
                   <h2 className={`section-title ${featured.length ? 'first' : ''}`}>{cat ? 'Бусад мэдээ' : 'Сүүлийн мэдээ'}</h2>
-                  <div className="card-grid">
-                    {latest.map((n) => <NewsCard key={n.id} news={n} />)}
-                  </div>
+                  {/* Нүүр хуудсанд «Сүүлийн мэдээ»-г showcase хэлбэрээр, ангиллын хуудсанд карт хэлбэрээр */}
+                  {cat ? (
+                    <div className="card-grid">
+                      {latest.map((n) => <NewsCard key={n.id} news={n} />)}
+                    </div>
+                  ) : (
+                    <LatestShowcase items={latest} />
+                  )}
                 </>
               )}
             </>
+          )}
+
+          {!cat && all.length > 0 && (
+            <section className="cat-section">
+              <div className="cat-section-head" style={{ '--c': 'var(--accent)' }}>
+                <h2>Аймгаар мэдээ</h2>
+                <Link to="/aimag" className="link">Газрын зураг →</Link>
+              </div>
+              <div className="card card-body">
+                <MongoliaMap compact counts={aimagCounts} onSelect={(a) => nav(`/aimag/${encodeURIComponent(a)}`)} />
+              </div>
+            </section>
           )}
 
           {!cat && (

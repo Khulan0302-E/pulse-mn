@@ -143,7 +143,7 @@ function snapshot(db, n) {
     source: n.source,
     sourceConfidential: n.sourceConfidential,
     mediaLayout: n.mediaLayout || null,
-    media: mediaFor(db, n.id).map((m) => ({ name: m.name, type: m.type })),
+    media: mediaFor(db, n.id).map((m) => ({ name: m.name, type: m.type, placement: m.placement || null })),
   };
 }
 
@@ -160,7 +160,7 @@ function applyFields(n, data) {
   if (data.mediaLayout || n.mediaLayout) n.mediaLayout = data.mediaLayout || null;
 }
 
-function applyMedia(db, newsId, uploaded, removeIds = [], order = []) {
+function applyMedia(db, newsId, uploaded, removeIds = [], order = [], placement = {}) {
   db.media = db.media.filter((m) => !(m.newsId === newsId && removeIds.includes(m.id)));
   const keyToId = {};
   uploaded.forEach((f) => {
@@ -180,6 +180,13 @@ function applyMedia(db, newsId, uploaded, removeIds = [], order = []) {
       if (m && m.position !== i) m.position = i;
     });
   }
+  // Текст доторх байрлал (хуучин файл: «m<id>», шинэ файл: түр түлхүүр)
+  Object.entries(placement || {}).forEach(([k, p]) => {
+    const id = /^m\d+$/.test(k) ? Number(k.slice(1)) : keyToId[k];
+    const m = db.media.find((x) => x.id === id && x.newsId === newsId);
+    const value = p && p !== 'top' ? p : null;
+    if (m && (m.placement || null) !== value) m.placement = value;
+  });
   if (mediaFor(db, newsId).length > MAX_MEDIA_PER_NEWS) {
     throw new AppError(`Нэг мэдээнд ${MAX_MEDIA_PER_NEWS}-аас ихгүй файл хавсаргана.`);
   }
@@ -211,7 +218,7 @@ export async function createNews(user, data, { submit = false } = {}) {
     };
     applyFields(n, data);
     d.news.push(n);
-    applyMedia(d, id, uploaded, [], data.mediaOrder);
+    applyMedia(d, id, uploaded, [], data.mediaOrder, data.mediaPlacement);
     pushVersion(d, n, user.id);
     if (submit) notifyRole(d, ROLES.EDITOR, `Шинэ ноорог хянуулахаар ирлээ: «${n.title}».`, id);
     addLog(d, user.id, submit ? 'Ноорог илгээсэн' : 'Ноорог үүсгэсэн', `Мэдээ #${id}`);
@@ -230,7 +237,7 @@ export async function updateDraft(user, id, data, { submit = false } = {}) {
   return mutate((d) => {
     const n = d.news.find((x) => x.id === id);
     applyFields(n, data);
-    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder);
+    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder, data.mediaPlacement);
     n.updatedAt = now();
     if (submit) {
       n.status = STATUS.REVIEW;
@@ -256,8 +263,17 @@ function sameContent(n, data) {
     !(data.newFiles || []).length &&
     !(data.removeMediaIds || []).length &&
     (n.mediaLayout || '') === (data.mediaLayout || n.mediaLayout || '') &&
-    !orderChanged(n, data)
+    !orderChanged(n, data) &&
+    !placementChanged(n, data)
   );
+}
+
+function placementChanged(n, data) {
+  const mine = mediaFor(getDb(), n.id);
+  return Object.entries(data.mediaPlacement || {}).some(([k, p]) => {
+    const m = mine.find((x) => `m${x.id}` === k);
+    return m && (m.placement || null) !== (p && p !== 'top' ? p : null);
+  });
 }
 
 function orderChanged(n, data) {
@@ -282,7 +298,7 @@ export async function resubmitNews(user, id, data, { force = false } = {}) {
   return mutate((d) => {
     const n = d.news.find((x) => x.id === id);
     applyFields(n, data);
-    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder);
+    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder, data.mediaPlacement);
     n.version += 1;
     n.status = STATUS.REVIEW;
     n.submittedAt = now();
@@ -419,7 +435,7 @@ export async function updatePublished(user, id, data) {
     const n = d.news.find((x) => x.id === id);
     const { copyrightConsent, ...rest } = data; // eslint-disable-line no-unused-vars
     applyFields(n, rest);
-    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder);
+    applyMedia(d, id, uploaded, data.removeMediaIds, data.mediaOrder, data.mediaPlacement);
     n.version += 1;
     n.updatedAt = now();
     pushVersion(d, n, user.id);

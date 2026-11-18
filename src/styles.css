@@ -5,19 +5,23 @@
    ============================================================ */
 
 :root {
-  --bg: #f6f4ef;
+  --bg: #f4f5f7;
   --surface: #ffffff;
-  --surface-2: #faf9f6;
+  --surface-2: #f8f9fb;
   --ink: #14161c;
   --ink-2: #363a45;
   --muted: #6b6f7a;
-  --line: #e7e3da;
-  --line-2: #d6d1c5;
+  --line: #e8eaee;
+  --line-2: #d7dbe2;
 
   --accent: #2448d8;
   --accent-hover: #1a37b0;
   --accent-soft: #eef2ff;
   --signal: #2f6bff;
+  --map-0: #e4e7ec;
+  --map-1: #bccaf7;
+  --map-2: #7d97ee;
+  --map-3: #2448d8;
 
   --blue: #1d4ed8;   --blue-soft: #eff6ff;
   --green: #047857;  --green-soft: #ecfdf5;
@@ -788,3 +792,59 @@ a.party-chip:hover { border-color: var(--party); }
 .rt-s-lg { font-size: 1.25em; }
 .rt-s-xl { font-size: 1.55em; line-height: 1.4; }
 .article-body strong { font-weight: 700; }
+
+/* ---------- Монголын газрын зураг ---------- */
+.mn-map { position: relative; }
+.mn-map svg { display: block; width: 100%; height: auto; }
+.mn-aimag { stroke: #fff; stroke-width: 1.2; cursor: pointer; transition: fill 0.15s, opacity 0.15s; outline: none; }
+.mn-aimag.is-hover, .mn-aimag:focus-visible { fill: var(--signal) !important; }
+.mn-aimag.is-selected { fill: var(--ink) !important; }
+.mn-label { font-size: 13px; font-weight: 600; fill: var(--ink); text-anchor: middle; dominant-baseline: middle; pointer-events: none; paint-order: stroke; stroke: rgba(255, 255, 255, 0.75); stroke-width: 3px; }
+.mn-label.is-selected { fill: #fff; stroke: rgba(0, 0, 0, 0.35); }
+.mn-capital { fill: #fff; stroke: var(--ink); stroke-width: 2; cursor: pointer; }
+.mn-tip { position: absolute; transform: translate(-50%, calc(-100% - 12px)); display: flex; flex-direction: column; align-items: center; padding: 6px 10px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 12px; white-space: nowrap; pointer-events: none; box-shadow: var(--shadow-lg); }
+.mn-tip span { color: #c9cdd6; }
+.mn-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; color: var(--muted); font-size: 12px; }
+.mn-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.mn-legend i { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
+.mn-map.compact .mn-legend { display: none; }
+.aimag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.aimag-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--line-2); border-radius: 999px; background: #fff; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+.aimag-chip span { color: var(--muted); font-size: 11.5px; }
+.aimag-chip:hover { border-color: var(--accent); }
+.aimag-chip.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+.aimag-chip.active span { color: #c9cdd6; }
+.meta-link:hover { color: var(--accent); text-decoration: underline; }
+@media (max-width: 640px) { .mn-label { font-size: 17px; } }
+
+/* ---------- Зургийг текстийн дунд байрлуулах ---------- */
+.inline-media { margin: 22px 0; }
+.mlp-place { width: 100%; margin-top: 6px; }
+.thumb-tag.right { left: auto; right: 6px; background: var(--accent); }
+
+/* ---------- «Сүүлийн мэдээ» showcase (21st.dev Team Showcase-ээс санаа авсан) ---------- */
+.ls { display: flex; align-items: stretch; gap: 32px; }
+.ls-stage { position: relative; flex: none; width: 46%; min-height: 340px; border-radius: 14px; overflow: hidden; background: var(--line); }
+.ls-slide { position: absolute; inset: 0; opacity: 0; transform: scale(1.03); transition: opacity 0.45s ease, transform 0.6s ease; }
+.ls-slide.is-active { opacity: 1; transform: none; }
+.ls-slide .cover { width: 100%; height: 100%; }
+.ls-slide .cover-label { display: none; }
+.ls-stage-cat { position: absolute; left: 12px; bottom: 12px; padding: 4px 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.92); }
+.ls-list { list-style: none; margin: 0; padding: 2px 0; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; }
+.ls-row { display: block; transition: opacity 0.3s ease; outline: none; }
+.ls-list.is-pointing .ls-row:not(.is-active) { opacity: 0.5; }
+.ls-title-line { display: flex; align-items: center; gap: 10px; }
+.ls-bar { flex: none; width: 16px; height: 12px; border-radius: 5px; background: rgba(20, 22, 28, 0.22); transition: width 0.3s ease, background 0.3s ease; }
+.ls-row.is-active .ls-bar { width: 22px; background: var(--accent); }
+.ls-title { font-size: 17px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.3s; }
+.ls-row.is-active .ls-title { color: var(--accent); }
+.ls-row:focus-visible .ls-title { text-decoration: underline; }
+.ls-arrow { flex: none; color: var(--accent); opacity: 0; transform: translateX(-8px); transition: opacity 0.2s, transform 0.2s; }
+.ls-row.is-active .ls-arrow { opacity: 1; transform: none; }
+.ls-meta { display: block; margin-top: 6px; padding-left: 26px; font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) {
+  .ls { flex-direction: column; gap: 20px; }
+  .ls-stage { width: 100%; min-height: 0; aspect-ratio: 16 / 10; }
+  .ls-meta { white-space: normal; letter-spacing: 0.1em; }
+}
+@media (prefers-reduced-motion: reduce) { .ls-slide { transition: none; } }

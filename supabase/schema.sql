@@ -647,6 +647,8 @@ grant execute on function public.increment_view(bigint) to anon, authenticated;
 -- 3. Зураг/бичлэгийн байршил, дараалал ---------------------------------
 alter table public.news  add column if not exists media_layout varchar(20);
 alter table public.media add column if not exists position int;
+-- Текст доторх байрлал: null/top | p<N> | end
+alter table public.media add column if not exists placement text;
 
 -- Дарааллыг засах эрх (мэдээний эзэн эсвэл редактор/админ)
 drop policy if exists media_update on public.media;

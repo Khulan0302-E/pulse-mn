@@ -44,6 +44,9 @@ export function translateError(error) {
     return CONSTRAINTS[name] || `Өгөгдлийн дүрэм зөрчигдлөө (${name || msg}).`;
   }
   if (error?.code === '23505') return 'Ийм мэдээлэл аль хэдийн бүртгэгдсэн байна.';
+  if (error?.code === 'PGRST204') {
+    return 'Supabase-ийн хүснэгт шинэчлэгдээгүй байна. supabase/ хавтсан дахь хамгийн сүүлийн update-*.sql файлыг SQL Editor дээр ажиллуулна уу.';
+  }
   if (error?.code === 'PGRST205' || error?.code === '42P01' || /does not exist|schema cache/i.test(msg)) {
     return 'Supabase дээр хүснэгт олдсонгүй. supabase/schema.sql-ийг SQL Editor дээр ажиллуулна уу.';
   }

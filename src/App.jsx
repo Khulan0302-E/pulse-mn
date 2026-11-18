@@ -11,6 +11,7 @@ import Layout from './components/Layout';
 import { RequireAuth, WorkspaceLayout } from './components/Guards';
 import Home from './pages/Home';
 import Article from './pages/Article';
+import AimagNews from './pages/AimagNews';
 import WeatherFx from './pages/WeatherFx';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -86,6 +87,8 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="category/:slug" element={<Home />} />
         <Route path="news/:id" element={<Article />} />
+        <Route path="aimag" element={<AimagNews />} />
+        <Route path="aimag/:name" element={<AimagNews />} />
         <Route path="tsag-agaar-hansh" element={<WeatherFx />} />
         <Route path="songuuli" element={<Election />} />
         <Route path="songuuli/ner-devshigch/:id" element={<CandidatePage />} />
