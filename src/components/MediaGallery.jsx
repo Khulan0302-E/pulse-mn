@@ -13,12 +13,12 @@ export const LAYOUTS = [
 
 export const layoutLabel = (id) => (LAYOUTS.find((l) => l.id === id) || LAYOUTS[0]).label;
 
-function Carousel({ media }) {
+function Carousel({ media, itemProps }) {
   const [i, setI] = useState(0);
   const go = (d) => setI((x) => (x + d + media.length) % media.length);
   return (
     <div className="mg-carousel">
-      <div className="mg-carousel-frame">
+      <div className="mg-carousel-frame" {...(itemProps ? itemProps(media[i]) : {})}>
         <MediaView key={media[i].id || media[i].key} media={media[i]} />
         {media.length > 1 && (
           <>
@@ -40,13 +40,15 @@ function Carousel({ media }) {
 }
 
 /** layout: auto | feature | columns | stack | carousel */
-export default function MediaGallery({ media = [], layout = 'auto', compact = false }) {
+/** itemProps(media) — нүд бүрд нэмэх props (жишээ нь байршлын цонхонд чирэх) */
+export default function MediaGallery({ media = [], layout = 'auto', compact = false, itemProps }) {
   if (!media.length) return null;
+  const extraProps = (m) => (itemProps ? itemProps(m) : {});
   if (media.length === 1) {
-    return <div className="mg mg-single"><MediaView media={media[0]} /></div>;
+    return <div className="mg mg-single" {...extraProps(media[0])}><MediaView media={media[0]} /></div>;
   }
   const kind = LAYOUTS.some((l) => l.id === layout) ? layout : 'auto';
-  if (kind === 'carousel') return <Carousel media={media} />;
+  if (kind === 'carousel') return <Carousel media={media} itemProps={itemProps} />;
   // «Автомат»: Facebook шиг 5-аас олон бол сүүлийн нүдэнд «+N» харуулна
   const max = kind === 'auto' && !compact ? 5 : media.length;
   const shown = media.slice(0, max);
@@ -54,7 +56,7 @@ export default function MediaGallery({ media = [], layout = 'auto', compact = fa
   return (
     <div className={`mg mg-${kind} mg-n${Math.min(shown.length, 5)}`}>
       {shown.map((m, i) => (
-        <div key={m.id || m.key} className="mg-cell">
+        <div key={m.id || m.key} className="mg-cell" {...extraProps(m)}>
           <MediaView media={m} />
           {extra > 0 && i === shown.length - 1 && <span className="mg-more">+{extra}</span>}
         </div>

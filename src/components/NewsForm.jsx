@@ -8,8 +8,7 @@ import { validateFile, uid } from '../lib/files';
 import { Field, MediaView } from './ui';
 import MediaLayoutPicker from './MediaLayoutPicker';
 import RichTextEditor from './RichTextEditor';
-import { layoutLabel } from './MediaGallery';
-import { paragraphCount, placementLabel } from '../lib/placement';
+import { placementLabel } from '../lib/placement';
 
 function LocationFields({ value, onChange, error }) {
   const db = getDb();
@@ -135,12 +134,12 @@ export default function NewsForm({
         )}
         {ordered.length > 0 && (
           <button type="button" className="btn btn-secondary btn-sm mt-8 layout-btn" onClick={() => setPicker(true)}>
-            <LayoutGrid size={15} /> Байршил: <strong>{ordered.length > 1 ? layoutLabel(form.mediaLayout) : 'Нэг зураг'}</strong> · Текст дэх байрлал · Өөрчлөх
+            <LayoutGrid size={15} /> Зургийн байршил · <strong>Өөрчлөх</strong>
           </button>
         )}
         {picker && (
           <MediaLayoutPicker items={ordered} layout={form.mediaLayout}
-            paragraphs={paragraphCount(form.content)}
+            content={form.content}
             placements={Object.fromEntries(ordered.map((m) => [m.key, placeOf(m)]))}
             onSave={({ layout, order: o, placement }) => {
               set('mediaLayout', layout);
