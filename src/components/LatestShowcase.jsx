@@ -1,7 +1,7 @@
 // «Сүүлийн мэдээ» — 21st.dev-ийн Team Showcase загвараас санаа авсан.
 // Зүүн талд нэг том зураг, баруун талд гарчгийн жагсаалт.
 // Гарчиг дээр хулгана аваачихад (эсвэл Tab-аар очиход) зураг тухайн мэдээнийх болж зөөлөн солигдоно.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useDb } from '../lib/useDb';
@@ -14,6 +14,9 @@ export default function LatestShowcase({ items }) {
   const db = useDb();
   const [activeId, setActiveId] = useState(items[0]?.id ?? null);
   const [pointing, setPointing] = useState(false); // жагсаалт дээр хулгана байгаа эсэх
+  // Шинэ мэдээ нийтлэгдэж жагсаалтын эхэнд орвол том зургийг тэр мэдээ рүү шилжүүлнэ
+  const firstId = items[0]?.id ?? null;
+  useEffect(() => setActiveId(firstId), [firstId]);
   const active = items.find((n) => n.id === activeId) || items[0];
   if (!active) return null;
 

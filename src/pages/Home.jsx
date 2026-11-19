@@ -46,16 +46,19 @@ export default function Home() {
   const items = cat ? all.filter((n) => n.categoryId === cat.id) : all;
   // «Онцлох мэдээ»: редакторын тэмдэглэсэн мэдээ (сүүлийнх нь эхэндээ, 8 хүртэл).
   // Карусель 3-аас доошгүй карттай байх ёстой тул цөөн бол сүүлийн мэдээгээр нөхнө.
-  // Нэг ч мэдээ тэмдэглээгүй бол өмнөх шигээ сүүлийн 5 мэдээг харуулна.
+  // Нэг ч мэдээ тэмдэглээгүй бол хамгийн их уншсан 5 мэдээг харуулна
+  // («Сүүлийн мэдээ»-тэй давхцахгүйн тулд).
+  const byViews = [...items].sort((a, b) => (b.views || 0) - (a.views || 0));
   let featured = [];
   if (!cat && items.length >= 3) {
     const flagged = items.filter((n) => n.featured).slice(0, 8);
-    featured = flagged.length ? flagged : items.slice(0, 5);
-    if (featured.length < 3) featured = [...featured, ...items.filter((n) => !featured.includes(n))].slice(0, 3);
+    featured = flagged.length ? flagged : byViews.slice(0, 5);
+    if (featured.length < 3) featured = [...featured, ...byViews.filter((n) => !featured.includes(n))].slice(0, 3);
   }
   const [lead, ...others] = items;
-  // Карусельтэй үед түүнд ороогүй 6 мэдээ, үгүй бол онцлох мэдээний дараах мэдээнүүд
-  const latest = featured.length ? items.filter((n) => !featured.includes(n)).slice(0, 6) : cat ? others : others.slice(0, 6);
+  // «Сүүлийн мэдээ»: үргэлж хамгийн сүүлд нийтлэгдсэн 6 мэдээ — шинэ мэдээ гармагц эхэнд нь орно
+  // (Карусель байхгүй үед эхний мэдээ дээр том «LeadStory» болж харагдах тул давтахгүй)
+  const latest = cat ? others : featured.length ? items.slice(0, 6) : others.slice(0, 6);
   const popular = [...all].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
 
   return (
