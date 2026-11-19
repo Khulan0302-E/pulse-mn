@@ -143,7 +143,7 @@ export default function Register() {
           <h1>{otpFor ? 'И-мэйлээ баталгаажуулах' : 'Бүртгүүлэх'}</h1>
           <p className="muted">
             {otpFor ? 'Бүртгэлээ дуусгахын тулд кодоо оруулна уу'
-              : role === ROLES.JOURNALIST ? 'Сэтгүүлч баримтаа хавсарган эрхээ баталгаажуулна' : 'Pulse.mn-д иргэнээр бүртгүүлэх'}
+              : role === ROLES.JOURNALIST ? 'Сэтгүүлч баримтаа хавсарган эрхээ баталгаажуулна' : 'News Freshest-д иргэнээр бүртгүүлэх'}
           </p>
         </div>
         {otpFor ? (

@@ -138,10 +138,13 @@ dl, dd { margin: 0; }
 .header { position: sticky; top: 0; z-index: 40; background: rgba(255, 255, 255, 0.96); backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--line-2); }
 .header-inner { display: flex; align-items: center; gap: 32px; height: 68px; }
 .logo-link { flex: none; display: inline-flex; }
-.logo { display: inline-flex; align-items: center; gap: 10px; flex: none; }
+.logo { display: inline-flex; align-items: center; gap: 6px; flex: none; }
 .logo-word { font-weight: 800; font-size: 24px; letter-spacing: -0.045em; line-height: 1; }
 .logo.small .logo-word { font-size: 19px; }
 .logo-tld { color: var(--muted); font-weight: 600; letter-spacing: -0.02em; }
+.logo-word { white-space: nowrap; }
+/* «Freshest» — шар тодруулагчаар зурсан мэт */
+.logo-fresh { background: linear-gradient(transparent 58%, #f2c230 58%, #f2c230 90%, transparent 90%); padding: 0 2px; }
 .logo-mark { flex: none; display: block; }
 .logo-mark.lg { margin: 0 auto 16px; }
 

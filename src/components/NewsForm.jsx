@@ -164,7 +164,7 @@ export default function NewsForm({
           <label className="check">
             <input type="checkbox" checked={form.copyrightConsent} onChange={(e) => set('copyrightConsent', e.target.checked)} />
             <span>
-              Хавсаргасан бичвэр, зураг, бичлэг нь миний бүтээл эсвэл ашиглах зөвшөөрөлтэй бөгөөд Pulse.mn-д нийтлэх
+              Хавсаргасан бичвэр, зураг, бичлэг нь миний бүтээл эсвэл ашиглах зөвшөөрөлтэй бөгөөд News Freshest-д нийтлэх
               лиценз олгож байгааг баталж байна. <span className="muted">(Зохиогчийн эрхийн тухай хууль)</span>
             </span>
           </label>
