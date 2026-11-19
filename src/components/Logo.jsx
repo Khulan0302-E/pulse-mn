@@ -1,4 +1,4 @@
-// News Freshest лого: халфтон (цэгэн хэвлэлийн) мегафон, шар дууны долгион.
+// Freshest News лого: халфтон (цэгэн хэвлэлийн) мегафон, шар дууны долгион.
 // Сонины хайчилбар маягийн «стикер» — цагаан хүрээ, зөөлөн сүүдэр.
 import { useId } from 'react';
 
@@ -64,7 +64,7 @@ export default function Logo({ small = false }) {
     <span className={`logo ${small ? 'small' : ''}`}>
       <LogoMark size={small ? 34 : 46} />
       <span className="logo-word">
-        News <span className="logo-fresh">Freshest</span>
+        <span className="logo-fresh">Freshest</span> News
       </span>
     </span>
   );

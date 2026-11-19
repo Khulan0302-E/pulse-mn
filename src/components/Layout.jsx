@@ -130,7 +130,7 @@ function Header() {
   return (
     <header className="header">
       <div className="container header-inner">
-        <Link to="/" className="logo-link" aria-label="News Freshest нүүр">
+        <Link to="/" className="logo-link" aria-label="Freshest News нүүр">
           <Logo />
         </Link>
         <nav className="catnav" aria-label="Мэдээний ангилал">
@@ -179,7 +179,7 @@ function Footer() {
           {CATEGORIES.map((c) => <Link key={c.id} to={`/category/${c.slug}`}>{c.name}</Link>)}
           <Link to="/songuuli">Сонгууль</Link>
         </div>
-        <p className="muted small footer-note">© {new Date().getFullYear()} News Freshest · Хувийн мэдээллийг Хүний хувийн мэдээлэл хамгаалах тухай хуулийн дагуу боловсруулна.</p>
+        <p className="muted small footer-note">© {new Date().getFullYear()} Freshest News · Хувийн мэдээллийг Хүний хувийн мэдээлэл хамгаалах тухай хуулийн дагуу боловсруулна.</p>
       </div>
     </footer>
   );

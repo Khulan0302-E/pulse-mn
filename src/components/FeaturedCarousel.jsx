@@ -199,7 +199,7 @@ export default function FeaturedCarousel({ items, autoPlayInterval = 6000, pause
                     <h2 className="cc-title">{n.title}</h2>
                     <p className="cc-quote">{excerpt(n.content, L.tier === 'mobile' ? 120 : 200)}</p>
                     <div className="cc-chips">
-                      <span className="cc-chip strong">{author?.fullName || 'News Freshest'}</span>
+                      <span className="cc-chip strong">{author?.fullName || 'Freshest News'}</span>
                       <svg className="cc-joint" viewBox="0 -2 14 12" width="14" height="10" preserveAspectRatio="none" aria-hidden="true">
                         <path d="M0 -2 V0 C0 0 5.09091 0.49688 5.09091 4 C5.09091 7.50312 0 8 0 8 V10 H14 V8 C14 8 8.90909 7.50312 8.90909 4 C8.90909 0.49688 14 0 14 0 V-2 Z" />
                       </svg>

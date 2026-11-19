@@ -49,7 +49,7 @@ export default function Login() {
         <div className="auth-head">
           <LogoMark size={52} className="lg" />
           <h1>Нэвтрэх</h1>
-          <p className="muted">News Freshest платформд тавтай морил</p>
+          <p className="muted">Freshest News платформд тавтай морил</p>
         </div>
         <form className="form-grid" onSubmit={submit} noValidate>
           {error && <Alert tone="error" title={error} />}
